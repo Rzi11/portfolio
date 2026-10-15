@@ -543,6 +543,17 @@ html.ld .loader.out{transform:translateY(-100%)}
 #parcours .gwrap{padding:12px 16px 8px}
 #parcours .gantt svg{max-height:calc(100svh - 56px - 150px);margin-inline:auto}
 .feature h2{text-transform:none;letter-spacing:-.025em}
+.hero-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.hero-top .status{margin-bottom:0}
+.certs{display:flex;gap:10px}
+.cert{position:relative;display:block;width:58px;height:58px;border-radius:50%;box-shadow:0 2px 10px rgba(19,23,30,.12);transition:transform .5s var(--ease)}
+.cert img{display:block;width:100%;height:100%;border-radius:50%}
+.cert:hover{transform:translateY(-3px) rotate(-8deg) scale(1.08)}
+.cert::after{content:attr(data-t);position:absolute;left:50%;top:calc(100% + 8px);translate:-50% 0;white-space:nowrap;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;background:var(--ink);color:var(--paper);padding:5px 9px;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:5}
+.cert:hover::after{opacity:1}
+.feature h2{white-space:nowrap;font-size:clamp(32px,3.9vw,56px);font-stretch:100%}
+.feature h2 span{display:inline}
+.stage figcaption{position:static;margin-top:22px;max-width:none}
 .shead-tools{margin-top:clamp(56px,7vw,88px)}
 </style>
 
@@ -571,13 +582,13 @@ html.ld .loader.out{transform:translateY(-100%)}
     <div class="hud" aria-hidden="true"><span>Flux actifs <b id="h-ag">--</b></span><span>Postes <b id="h-st">--</b></span><span>Passages <b id="h-db">--</b>/min</span><span class="hint">Clique pour ajouter un poste</span></div>
     <div class="hero">
       <div>
-        <div class="status"><i></i>Ouvert aux opportunités</div>
+        <div class="hero-top"><div class="status"><i></i>Ouvert aux opportunités</div><div class="certs" aria-label="Certifications"><span class="cert" data-t="Lean Six Sigma Yellow Belt · nov. 2024"><img src="images/badge-lssyb.webp" width="90" height="90" alt="Certified Lean Six Sigma Yellow Belt"></span><span class="cert" data-t="Certified ScrumMaster · févr. 2025"><img src="images/badge-csm.webp" width="90" height="90" alt="Certified ScrumMaster, Scrum Alliance"></span></div></div>
         <div class="lbl role"><b>Ingénieur Méthodes</b> &amp; Pilotage de Process · Paris</div>
         <h1 aria-label="Quand un problème m'agace, j'en fais un outil."><span class="w" aria-hidden="true"><span style="--i:0">Quand</span></span> <span class="w" aria-hidden="true"><span style="--i:1">un</span></span> <span class="w" aria-hidden="true"><span style="--i:2">problème</span></span> <span class="w" aria-hidden="true"><span style="--i:3">m'agace,</span></span> <span class="w" aria-hidden="true"><span style="--i:4">j'en</span></span> <span class="w" aria-hidden="true"><span style="--i:5">fais</span></span> <em class="it" aria-hidden="true"><span class="w"><span style="--i:6">un</span></span> <span class="w"><span style="--i:7">outil.</span></span></em></h1>
         <p class="lede">Ingénieur méthodes diplômé d'un Master en Ingénierie des Systèmes Complexes, certifié Yellow Belt Lean Six Sigma, je pilote l'amélioration continue sur le terrain : analyse des flux, standardisation des processus et accompagnement des équipes, chez Auchan puis Casino.</p>
         <div class="ctas">
           <a class="btn primary mag" href="#contact" data-cur="link">Me contacter <span class="arr">→</span></a>
-          <a class="btn mag" href="https://linkedin.com/in/ghaythmejai/" target="_blank" rel="noopener" data-cur="link">LinkedIn <span class="arr">↗</span></a>
+          <a class="btn mag" href="https://www.linkedin.com/in/gaythmejai/" target="_blank" rel="noopener" data-cur="link">LinkedIn <span class="arr">↗</span></a>
         </div>
       </div>
       <figure class="part" id="part">
@@ -597,7 +608,7 @@ html.ld .loader.out{transform:translateY(-100%)}
     <div class="kpi rv" role="listitem"><strong data-count="|120|">120</strong><span>opérateurs formés, adhésion &gt;&nbsp;90&nbsp;%</span></div>
     <div class="kpi rv" role="listitem"><strong data-count="|8| mois">8&nbsp;mois</strong><span>de retour sur investissement (projet ICPE)</span></div>
   </div>
-  <p class="lbl src">Résultats obtenus chez Auchan, 2023–2025</p>
+  <p class="lbl src">Résultats obtenus chez Auchan, 2023–2025, et Casino, 2025–2026</p>
 
   <section id="winn3oum" class="feature rv" aria-label="Win N3oum, projet perso">
     <div>
@@ -733,7 +744,7 @@ html.ld .loader.out{transform:translateY(-100%)}
     <p class="big rv">Un flux à <em class="it">optimiser ?</em></p>
     <div class="lines">
       <div class="rv"><span class="lbl">E-mail</span><span class="v" id="mail">contact@gaythmejai.com</span><button class="copy mag" id="copy" type="button" data-cur="link">Copier</button></div>
-      <div class="rv"><span class="lbl">LinkedIn</span><a class="v" href="https://linkedin.com/in/ghaythmejai/" target="_blank" rel="noopener" data-cur="link">linkedin.com/in/ghaythmejai ↗</a></div>
+      <div class="rv"><span class="lbl">LinkedIn</span><a class="v" href="https://www.linkedin.com/in/gaythmejai/" target="_blank" rel="noopener" data-cur="link">linkedin.com/in/gaythmejai ↗</a></div>
       <div class="rv"><span class="lbl">Langues</span><span class="v">Français (C2) · Arabe (C2) · Anglais (C1)</span></div>
     </div>
   </section>
