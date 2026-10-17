@@ -237,6 +237,49 @@ button{font-family:inherit}
 .leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--g-muted)}
 .leg span{display:inline-flex;align-items:center;gap:8px}
 .leg i{width:22px;height:5px;border-radius:3px}
+/* Tableau des départs (Black Friday) */
+.dep-sub{margin:6px 0 0;font-size:14px;color:var(--g-muted);max-width:56ch}
+.dep-sw{display:inline-flex;border:1.5px solid var(--g-line);border-radius:99px;padding:3px;gap:2px;background:var(--g)}
+.dep-sw button{font:700 13px var(--display);color:var(--g-muted);background:none;border:0;border-radius:99px;padding:8px 14px;cursor:pointer;transition:background .3s,color .3s}
+.dep-sw button[aria-pressed="true"][data-m="base"]{background:var(--coral);color:var(--g)}
+.dep-sw button[aria-pressed="true"][data-m="plan"]{background:var(--accent);color:var(--g)}
+.dep{background:var(--g);border:1px solid var(--g-line);border-radius:10px;overflow:hidden;font-family:var(--data)}
+.dep-h,.dep-r{display:grid;grid-template-columns:76px minmax(0,1fr) 110px 260px;gap:14px;align-items:center;padding:0 18px}
+.dep-h{height:38px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--g-muted);border-bottom:1px solid var(--g-line)}
+.dep .n{text-align:right}
+.dep-r{min-height:44px;border-bottom:1px solid #24272C;color:var(--g-ink);font-size:14px;transition:background .5s}
+.dep-r:nth-child(even){background:#1A1C1F}
+.dep-r .t{color:var(--accent);font-weight:600;font-size:17px;letter-spacing:.02em}
+.dep-r .d{font-family:var(--display);font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dep-r .n{color:var(--g-muted);font-variant-numeric:tabular-nums}
+.dep-r .st{display:flex;align-items:center;gap:8px;justify-content:flex-start}
+.flap{display:inline-flex;gap:2px}
+.flap i{font-style:normal;display:inline-grid;place-items:center;min-width:.9em;height:1.65em;padding:0 1px;background:linear-gradient(#30343A 50%,#282B30 50%);border-radius:2px;font-weight:600;font-size:13px;color:var(--g-ink);position:relative}
+.flap i.sp{background:none!important;min-width:.4em}
+.dep-r.ok .flap i{color:#8FD3A8}
+.dep-r.late .flap i{background:linear-gradient(#FF7A5C 50%,#F26A4B 50%);color:var(--g)}
+.dep-r.late{background:color-mix(in srgb,var(--coral) 12%,transparent)!important}
+.dep-r.saved{background:color-mix(in srgb,var(--accent) 12%,transparent)!important}
+.dep-r .gain{font:700 11.5px var(--display);color:var(--g);background:var(--accent);border-radius:99px;padding:3px 8px;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .4s .5s,transform .4s .5s}
+.dep-r .gain:empty{display:none}
+.dep-r.saved .gain{opacity:1;transform:none}
+.dep-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:16px 18px 18px;border-top:1px solid var(--g-line)}
+.dep-f span{display:block;font:700 12.5px var(--display);color:var(--g-muted);margin-bottom:4px}
+.dep-f b{font:600 clamp(34px,4.4vw,56px) var(--data);line-height:1;font-variant-numeric:tabular-nums;color:var(--coral);transition:color .4s}
+.dep[data-m="plan"] .dep-f b{color:var(--accent)}
+.dep-win{text-align:right;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s}
+.dep[data-m="plan"] .dep-win{opacity:1;transform:none}
+@media (max-width:900px){
+  .chart{overflow-x:visible}
+  .dep-h,.dep-r{grid-template-columns:50px minmax(0,1fr) auto;gap:10px;padding:0 12px}
+  .dep .n{display:none}
+  .dep-r{min-height:48px;padding-block:6px}
+  .dep-r .d{white-space:normal;font-size:13px;line-height:1.25}
+  .dep-r .t{font-size:14px}
+  .dep-r .st{flex-direction:column;align-items:flex-end;gap:4px}
+  .flap{gap:1px}.flap i{font-size:10.5px;min-width:.85em}
+  .dep-sw{width:100%}.dep-sw button{flex:1;padding:8px 6px;font-size:12px}
+}
 #race{display:block;width:100%;height:auto;overflow:visible}
 #race .grid{stroke:var(--g-line);stroke-width:1}
 #race .ax{fill:var(--g-muted);font:500 12px var(--data)}
@@ -453,11 +496,16 @@ details p{padding:0 0 22px 36px;color:var(--muted);max-width:66ch;font-size:16px
   <div class="wrap">
     <div class="bf-head">
       <div><span class="eyebrow" style="--c:var(--coral)"><i></i>Stress test</span><h2 class="h2" id="h-bf">Une journée volontairement impossible</h2></div>
-      <p class="lede">Une plateforme logistique à quatre clients, un Black Friday de 5 h à 17 h, dix imprévus en cascade. Voici la course entre ne rien faire et suivre le plan, telle que le moteur l'a calculée.</p>
+      <p class="lede">Une plateforme logistique à quatre clients, un Black Friday de 5 h à 17 h, dix imprévus en cascade. Voici chaque départ de la journée, sans rien faire puis avec le plan, tel que le moteur l'a calculé.</p>
     </div>
     <div class="chart">
-      <div class="chart-top"><h3>Commandes en retard, cumulées au fil de la journée</h3><div class="leg"><span><i style="background:var(--coral)"></i>Sans rien changer</span><span><i style="background:var(--accent)"></i>Avec le plan de Crewline, 5 renforts</span></div></div>
-      <svg id="race" viewBox="0 0 1200 580" role="img" aria-label="Courbes des retards cumulés de 5 h à 17 h : 1 248 commandes en retard sans changement, 330 avec le plan. Dix imprévus marqués sur l'axe du temps."></svg>
+      <div class="chart-top"><div><h3>Tableau des départs</h3><p class="dep-sub">Les dix imprévus tombent entre 05:00 et 14:00. Les retards, eux, n'apparaissent qu'au départ des camions.</p></div>
+        <div class="dep-sw" role="group" aria-label="Scénario affiché"><button type="button" data-m="base" aria-pressed="true">Sans rien changer</button><button type="button" data-m="plan" aria-pressed="false">Avec Crewline · 5 renforts</button></div></div>
+      <div class="dep" id="dep" data-m="base">
+        <div class="dep-h"><span>Heure</span><span>Départ</span><span class="n">Commandes</span><span>Statut</span></div>
+        <div id="depRows"></div>
+        <div class="dep-f"><div><span>Commandes en retard</span><b id="depTot">1&#8201;248</b></div><div class="dep-win"><span>Retards évités</span><b>918</b></div></div>
+      </div>
     </div>
     <div class="bf-nums">
       <div><b>26</b><span>postes, trieur plafonné à 1 300 colis/h</span></div>
@@ -825,29 +873,36 @@ const stps=$$('.stp');
 stps.forEach((b,i)=>b.addEventListener('click',()=>{ const r=stRun.getBoundingClientRect(), y=scrollY+r.top+(r.height-innerHeight)*(i/(cards.length-1)); go(y); }));
 
 /* ================= BLACK FRIDAY : la course ================= */
-(function race(){
-  const svg=$('#race'), W=1200, Hh=580, L=56, R=110, T=20, B=210, n=MEGA.lateBase.length-1, max=1400;
-  const X=i=>L+i/n*(W-L-R), Y=v=>T+(1-v/max)*(Hh-T-B);
-  let s='';
-  [0,250,500,750,1000,1250].forEach(v=>{ s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L-10}" y="${Y(v)+4}" text-anchor="end">${fr(v)}</text>`; });
-  for(let h=0;h<=12;h+=2){ const i=h*12; s+=`<text class="ax" x="${X(i)}" y="${Y(0)+20}" text-anchor="middle">${String(MEGA.start+h).padStart(2,'0')}:00</text>`; }
-  const path=a=>'M'+a.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L');
-  const area='M'+MEGA.lateBase.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L')+'L'+MEGA.latePlan.map((v,i)=>[X(i),Y(v)]).reverse().map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L')+'Z';
-  s+=`<defs><pattern id="hz" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="10" fill="var(--accent)" opacity=".28"/></pattern></defs><path id="gapA" d="${area}" fill="url(#hz)"/><text id="gapT" class="end" x="${X(n*.9)}" y="${Y(820)}" text-anchor="end" fill="var(--accent)">918 retards évités</text>`;
-  s+=`<path class="curve" id="cB" d="${path(MEGA.lateBase)}" stroke="var(--coral)"/><path class="curve" id="cP" d="${path(MEGA.latePlan)}" stroke="var(--accent)"/>`;
-  s+=`<text class="end" id="eB" x="${X(n)+12}" y="${Y(MEGA.lateBase[n])+5}" fill="var(--coral)">1 248</text><text class="end" id="eP" x="${X(n)+12}" y="${Y(MEGA.latePlan[n])+5}" fill="var(--accent)">330</text>`;
-  /* les dix imprévus, comme les arrêts d'une ligne */
-  const EV=[[0,'3 intérimaires absents'],[150,'Chariot en panne'],[180,'Camion fournisseur'],[240,'Préparateur absent'],[270,'Vente flash'],[315,'Trieur en panne'],[330,'Pharmacienne indisponible'],[405,'Chambre froide bloquée'],[480,'Chef d\'équipe malade'],[540,'Commande urgente']];
-  const ry=Y(0)+112; s+=`<line class="rail" x1="${L}" x2="${W-R}" y1="${ry}" y2="${ry}"/>`;
-  EV.forEach(([m,l],j)=>{ const x=X(m/5), tier=[-1,1,-2,2][j%4], dy=tier<0?(tier===-1?-16:-50):(tier===1?26:60), anc=j===0?'start':j===EV.length-1?'end':'middle';
-    s+=`<line x1="${x}" x2="${x}" y1="${ry}" y2="${ry+dy*.55}" stroke="var(--coral)" stroke-width="1.5" opacity=".6"/><circle class="stopc" cx="${x}" cy="${ry}" r="7"/><text class="stopt" x="${x}" y="${dy<0?ry+dy:ry+dy-14}" text-anchor="${anc}">${clock(m,MEGA.start)}</text><text class="stopl" x="${x}" y="${dy<0?ry+dy-14:ry+dy}" text-anchor="${anc}">${esc(l)}</text>`; });
-  svg.innerHTML=s;
-  const cb=$('#cB'), cp=$('#cP'), eB=$('#eB'), eP=$('#eP');
-  [cb,cp].forEach(p=>{ const Lg=p.getTotalLength(); p.style.strokeDasharray=Lg; p.style.strokeDashoffset=RM?0:Lg; });
-  const gA=$('#gapA'), gT=$('#gapT'); [eB,eP,gA,gT].forEach(e=>e.style.opacity=RM?1:0);
+(function departures(){
+  /* Chiffres tirés du moteur : même journée, même plan (5 renforts) que le reste de la page */
+  const ROWS=[['10:00','Pharma express',176,0,0],['10:30','Colissimo · mono',1040,0,0],['11:00','Colissimo multi · Magasins Nord',560,0,0],['12:00','Cross-dock fournisseurs',96,0,0],
+    ['12:30','Chronopost · Pharma express',1152,0,0],['12:45','Pharma entrante, chaîne du froid',48,4,4,1],['13:00','Multi zones A-B · Électroménager',504,0,0],['14:00','Magasins Centre',160,0,0],
+    ['14:30','DPD · mono',896,0,0],['15:00','DPD multi · Cadeaux · Vente flash',1728,391,0],['15:30','Pharma express',176,24,24],['16:00','Cross-dock fournisseurs',96,0,0],
+    ['16:30','UPS · Multi A-B · Magasins Sud · Électroménager',1400,829,302]];
+  const box=$('#depRows'), dep=$('#dep'), tot=$('#depTot'), sw=$$('.dep-sw button');
+  box.innerHTML=ROWS.map(r=>`<div class="dep-r"><span class="t">${r[0]}</span><span class="d">${esc(r[1])}</span><span class="n">${fr(r[2])}</span><span class="st"><span class="flap"></span><span class="gain"></span></span></div>`).join('');
+  const els=[...box.children], CH='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const label=(r,m)=>{ const v=m==='base'?r[3]:r[4]; return v? (fr(v)+(r[5]?' EN RETARD':' À QUAI')) : (r[5]?'ARRIVÉ':'PARTI'); };
+  const cells=t=>[...t].map(c=>c===' '?'<i class="sp"> </i>':`<i>${esc(c)}</i>`).join('');
+  let timers=[], mode=null;
+  function flapTo(el,text,delay){ const f=el.querySelector('.flap'); if(RM){ f.innerHTML=cells(text); return; }
+    const old=f.textContent; if(old===text) return; f.innerHTML=cells(text); const is=[...f.children], ch=[...text];
+    is.forEach((x,j)=>{ if(ch[j]!==' ') x.textContent=CH[(Math.random()*CH.length)|0]; });
+    timers.push(setTimeout(()=>{ let k=0; const iv=setInterval(()=>{ k++; is.forEach((x,j)=>{ if(ch[j]===' ') return; x.textContent= k>3+j? ch[j] : CH[(Math.random()*CH.length)|0]; }); if(k>4+ch.length) clearInterval(iv); },45); timers.push(iv); },delay)); }
+  function paint(m,anim){ els.forEach((el,i)=>{ const r=ROWS[i], v=m==='base'?r[3]:r[4], sv=r[3]-r[4];
+      el.classList.toggle('late',v>0); el.classList.toggle('ok',v===0); el.classList.toggle('saved',m==='plan'&&sv>0);
+      el.querySelector('.gain').textContent=sv>0&&m==='plan'?`${fr(sv)} sauvées`:'';
+      if(anim) flapTo(el,label(r,m),i*60); else el.querySelector('.flap').innerHTML=cells(label(r,m)); }); }
+  function show(m){ if(m===mode) return; const from=mode; mode=m; timers.forEach(t=>{clearTimeout(t);clearInterval(t)}); timers=[];
+    dep.dataset.m=m; sw.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m))); paint(m,true);
+    const z=m==='base'?1248:330, a=from===null?0:(m==='base'?330:1248); if(RM){ tot.textContent=fr(z).replace(' ','\u2009'); return; }
+    const t0=performance.now(); (function tick(now){ const p=Math.min(1,(now-t0)/1100), e=1-Math.pow(1-p,3); tot.textContent=fr(a+(z-a)*e).replace(' ','\u2009'); if(p<1) requestAnimationFrame(tick); })(t0); }
+  let auto=null, user=false;
+  sw.forEach(b=>b.addEventListener('click',()=>{ user=true; clearInterval(auto); show(b.dataset.m); }));
+  paint('base',false); mode='base';
   new IntersectionObserver((es,o)=>es.forEach(e=>{ if(!e.isIntersecting) return; o.disconnect(); if(RM) return;
-    [cb,cp].forEach((p,i)=>{ p.style.transition=`stroke-dashoffset 2.6s cubic-bezier(.45,0,.2,1) ${i*.25}s`; p.style.strokeDashoffset=0; });
-    [eB,eP,gA,gT].forEach((t,i)=>{ t.style.transition=`opacity .8s ${2.4+i*.2}s`; t.style.opacity=1; }); }),{threshold:.4}).observe(svg);
+    els.forEach(el=>el.querySelector('.flap').textContent=''); mode=null; show('base');
+    auto=setInterval(()=>{ if(!user) show(mode==='base'?'plan':'base'); },6500); }),{threshold:.35}).observe(dep);
 })();
 
 /* ================= ACCÈS ================= */
