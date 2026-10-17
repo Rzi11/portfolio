@@ -231,6 +231,53 @@ h2{margin:0;font-weight:900;font-stretch:112%;font-size:clamp(32px,4.6vw,60px);l
 .waves{position:absolute;left:0;right:0;bottom:0;height:clamp(34px,4vw,52px);z-index:-1;overflow:hidden;pointer-events:none}
 .waves svg{position:absolute;bottom:0;left:0;width:200%;height:100%}
 
+/* ---------- Feature: Crewline (graphite + jaune sécurité, mise en page miroir) ---------- */
+.feature.cw{--cw-g:#16181B;--cw-g2:#1F2226;--cw-y:#F5C400;--cw-ink:#F2F0EA;--cw-mut:#A8A49B;--cw-s1:#5AA2E6;--cw-s5:#F06292;
+  background:var(--cw-g);color:var(--cw-ink);grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr);margin-top:clamp(28px,4vw,48px)}
+.feature.cw > div:first-child{order:2}
+.feature.cw .lbl{color:var(--cw-y)}
+.feature.cw .lbl b{color:var(--cw-ink)}
+.feature.cw h2{color:var(--cw-ink);display:flex;align-items:center;gap:.28em}
+.feature.cw h2 svg{width:.86em;height:.86em;flex:none;border-radius:.19em}
+.feature.cw h2 .mv{stroke-dasharray:70;stroke-dashoffset:0;transition:stroke-dashoffset 1s var(--ease)}
+.feature.cw:hover h2 .mv{animation:cwmove 1.1s var(--ease)}
+@keyframes cwmove{from{stroke-dashoffset:70}}
+.feature.cw p.pitch{color:color-mix(in srgb,var(--cw-ink) 82%,transparent)}
+.feature.cw p.pitch q{color:var(--cw-ink)}
+.feature.cw .wn-facts{background:color-mix(in srgb,var(--cw-ink) 16%,transparent)}
+.feature.cw .wn-facts div{background:var(--cw-g);align-content:start}
+.feature.cw .wn-facts div:hover{background:color-mix(in srgb,var(--cw-y) 12%,var(--cw-g))}
+.feature.cw .wn-facts strong{color:var(--cw-ink);font-variant-numeric:tabular-nums}
+.feature.cw .wn-facts strong em{font-style:normal;color:var(--cw-y)}
+.feature.cw .wn-facts span{color:color-mix(in srgb,var(--cw-ink) 70%,transparent)}
+.feature.cw .ctas .btn{border-color:var(--cw-ink);color:var(--cw-ink)}
+.feature.cw .ctas .btn::before{background:var(--cw-ink)}
+.feature.cw .ctas .btn.primary{background:var(--cw-y);border-color:var(--cw-y);color:var(--cw-g)}
+.feature.cw .ctas .btn:hover{color:var(--cw-g);border-color:var(--cw-ink)}
+.feature.cw .browser{margin-left:auto;transform:rotate(1.2deg);background:#F2F0EA;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.feature.cw .browser .bar{background:#E4E1D8}
+.feature.cw .browser img{aspect-ratio:1600/1108}
+.feature.cw .phone{border-color:#0B0C0E;background:#0B0C0E;box-shadow:0 22px 50px rgba(0,0,0,.6)}
+.feature.cw .phone.p1{right:auto;left:14%;transform:rotate(3deg) translateZ(40px)}
+.feature.cw .phone.p2{right:auto;left:-2%;bottom:5%;transform:rotate(-4deg) translateZ(70px)}
+.feature.cw .stage figcaption{color:color-mix(in srgb,var(--cw-ink) 55%,transparent)}
+.lanes{position:absolute;left:0;right:0;bottom:0;height:clamp(34px,4vw,52px);z-index:-1;pointer-events:none}
+.lanes svg{width:100%;height:100%;display:block}
+.lanes path{fill:none;stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.lanes .mv{stroke:var(--cw-y);stroke-width:4}
+@media (prefers-reduced-motion:no-preference){
+  .lanes .mv{stroke-dasharray:1 1;stroke-dashoffset:1;animation:lane 7s var(--ease) infinite}
+  @keyframes lane{0%{stroke-dashoffset:1}45%,80%{stroke-dashoffset:0}100%{stroke-dashoffset:-1}}
+}
+.g-ms.cw{fill:#F5C400;stroke:var(--ink)}
+.g-msb.cw{stroke:#B89300}
+.g-lead.cw{stroke:#B89300}
+@media (max-width:860px){
+  .feature.cw{grid-template-columns:1fr}
+  .feature.cw > div:first-child{order:0}
+  .feature.cw .phone.p1{left:22%}
+}
+
 /* ---------- Cursor (desktop only) ---------- */
 .cur{position:fixed;left:0;top:0;z-index:100;pointer-events:none;display:none}
 .cur .ring{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid var(--ink);border-radius:50%;transition:width .35s var(--ease),height .35s var(--ease),margin .35s var(--ease),background .35s,border-color .35s;display:grid;place-items:center}
@@ -572,10 +619,11 @@ html.ld .loader.out{transform:translateY(-100%)}
   <a class="brand" href="#top">G. MEJAI<span>.</span></a>
   <nav aria-label="Sections">
     <a href="#winn3oum"><sup>00</sup>Win N3oum</a>
-    <a href="#parcours"><sup>01</sup>Parcours</a>
-    <a href="#projets"><sup>02</sup>Projets</a>
-    <a href="#outils"><sup>03</sup>Méthodes</a>
-    <a href="#contact"><sup>04</sup>Contact</a>
+    <a href="#crewline"><sup>01</sup>Crewline</a>
+    <a href="#parcours"><sup>02</sup>Parcours</a>
+    <a href="#projets"><sup>03</sup>Projets</a>
+    <a href="#outils"><sup>04</sup>Méthodes</a>
+    <a href="#contact"><sup>05</sup>Contact</a>
   </nav>
 </div><div class="progress" id="progress"></div></header>
 
@@ -632,7 +680,7 @@ html.ld .loader.out{transform:translateY(-100%)}
         <a class="btn mag" href="http://winn3oum.gaythmejai.com/" target="_blank" rel="noopener" data-cur="link">Voir le site <span class="arr">↗</span></a>
       </div>
     </div>
-    <figure class="stage" id="stage">
+    <figure class="stage">
       <div class="stage-in">
         <div class="browser"><div class="bar"><i></i><i></i><i></i><span>winn3oum.gaythmejai.com</span></div><img src="images/winn3oum-site.jpg" alt="Le site vitrine de Win N3oum : titre, accroche et téléphone affichant l'app" width="1440" height="900"></div>
         <div class="phone p1"><img src="images/winn3oum-lyoum.jpg" alt="Écran Lyoum : la meilleure plage du moment avec Mouj, Zarga et Algues heure par heure" width="780" height="1688"></div>
@@ -643,6 +691,35 @@ html.ld .loader.out{transform:translateY(-100%)}
     <div class="waves" aria-hidden="true">
       <svg class="b" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0 30 Q75 10 150 30 T300 30 T450 30 T600 30 T750 30 T900 30 T1050 30 T1200 30 V60 H0Z" fill="#7FE3D6"/></svg>
       <svg class="a" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0 38 Q100 20 200 38 T400 38 T600 38 T800 38 T1000 38 T1200 38 V60 H0Z" fill="#14B8A6"/></svg>
+    </div>
+  </section>
+
+  <section id="crewline" class="feature cw rv" aria-label="Crewline, projet perso">
+    <div>
+      <span class="lbl"><b>Nouveau</b> · Projet perso · outil métier · en ligne</span>
+      <h2><svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="16" fill="#F5C400"/><path d="M16 24 H68" stroke="#16181B" stroke-width="8" stroke-linecap="round"/><path class="mv" d="M16 42 H30 C42 42 42 60 54 60 H68" fill="none" stroke="#16181B" stroke-width="8" stroke-linecap="round"/><path d="M16 60 H24" stroke="#16181B" stroke-width="8" stroke-linecap="round" opacity=".35"/><circle cx="68" cy="42" r="5" fill="#16181B" opacity=".35"/></svg>Crewline</h2>
+      <p class="pitch">Une absence, une vente flash, un trieur en panne : en entrepôt, il faut décider vite <q>qui je déplace ?</q> J'en ai fait une app web qui rejoue la journée minute par minute, montre où ça va coincer et propose les renforts. Le chef d'équipe garde la main.</p>
+      <div class="wn-facts">
+        <div><strong>169 <em>→</em> 0</strong><span>commandes en retard sur une journée type, avec 2 renforts</span></div>
+        <div><strong>138 plans</strong><span>simulés en une dizaine de secondes sur un Black Friday à 127 personnes</span></div>
+        <div><strong>23 tests</strong><span>automatiques : jamais un plan pire que ne rien faire</span></div>
+        <div><strong>0 serveur</strong><span>tout tourne dans le navigateur, prévisions par apprentissage automatique comprises</span></div>
+      </div>
+      <div class="ctas">
+        <a class="btn primary mag" href="crewline/crewline-autonome.html" target="_blank" rel="noopener" data-cur="link">Ouvrir l'app <span class="arr">↗</span></a>
+        <a class="btn mag" href="crewline/" target="_blank" rel="noopener" data-cur="link">Voir le site <span class="arr">↗</span></a>
+      </div>
+    </div>
+    <figure class="stage">
+      <div class="stage-in">
+        <div class="browser"><div class="bar"><i></i><i></i><i></i><span>gaythmejai.com/crewline</span></div><img src="images/crewline-charge.webp" alt="Écran Diagnostic de Crewline : charge de chaque poste par créneau, en rouge les fenêtres où il manque du monde" width="1600" height="1108" loading="lazy"></div>
+        <div class="phone p1"><img src="images/crewline-diagnostic.webp" alt="Diagnostic sur téléphone : Emballage multi n'aura pas assez de monde entre 06:35 et 13:20" width="780" height="1560" loading="lazy"></div>
+        <div class="phone p2"><img src="images/crewline-plans.webp" alt="Plans sur téléphone : ne rien changer 169 retards, un renfort 41, moins de retards 0" width="780" height="1560" loading="lazy"></div>
+      </div>
+      <figcaption>Captures de l'app, journée d'exemple aux cadences fictives</figcaption>
+    </figure>
+    <div class="lanes" aria-hidden="true">
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0 14 H1200" stroke="#5AA2E6" opacity=".55"/><path d="M0 46 H1200" stroke="#F06292" opacity=".35"/><path class="mv" pathLength="1" d="M0 30 H460 C540 30 540 46 620 46 H1200"/></svg>
     </div>
   </section>
 
@@ -729,7 +806,7 @@ html.ld .loader.out{transform:translateY(-100%)}
       <div class="board" id="board">
 <div class="zone z-meth" style="--span:5"><h4><span>Méthodes</span><em>09</em></h4><div class="pegs"><button type="button" class="tool" data-m="auchan" data-w="Chantiers Kaizen animés sur le terrain chez Auchan, 120 opérateurs formés." style="--i:0;--r:-2.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Kaizen</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="auchan" data-w="Chantiers 5S menés avec les équipes chez Auchan." style="--i:1;--r:1.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">5S</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="auchan" data-w="Analyses AMDEC pendant les chantiers Auchan." style="--i:2;--r:-1deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">AMDEC</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="auchan" data-w="Démarche PDCA sur les chantiers Auchan." style="--i:3;--r:2.2deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">PDCA</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="auchan" data-w="Standardisation de la préparation de commandes chez Auchan : −45 % d&#x27;erreurs." style="--i:4;--r:-1.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Standardisation</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="" data-w="Méthode que je maîtrise." style="--i:5;--r:0.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">VSM</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Méthode que je maîtrise." style="--i:6;--r:-2.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">SMED</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Méthode que je maîtrise." style="--i:7;--r:1.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Ishikawa</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Méthode que je maîtrise." style="--i:8;--r:-1deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Pilotage QCD</span><small>&nbsp;</small></span></button></div></div>
 <div class="zone z-data" style="--span:4"><h4><span>Données &amp; pilotage</span><em>08</em></h4><div class="pegs"><button type="button" class="tool" data-m="auchan" data-w="Suivi des KPI et analyses de performance chez Auchan." style="--i:9;--r:2.2deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Excel VBA</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="auchan" data-w="Tableaux de bord de performance chez Auchan." style="--i:10;--r:-1.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Power BI</span><small>Auchan</small></span></button><button type="button" class="tool" data-m="auchan casino" data-w="Indicateurs et reporting à la direction chez Auchan et Casino." style="--i:11;--r:0.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">KPI &amp; reporting</span><small>Auchan · Casino</small></span></button><button type="button" class="tool" data-m="" data-w="Outil que je maîtrise." style="--i:12;--r:-2.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">SQL</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Outil que je maîtrise." style="--i:13;--r:1.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">SAS</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Outil que je maîtrise." style="--i:14;--r:-1deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Python</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Outil que je maîtrise." style="--i:15;--r:2.2deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">MS Project</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Outil que je maîtrise." style="--i:16;--r:-1.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Jira</span><small>&nbsp;</small></span></button></div></div>
-<div class="zone z-home" style="--span:3"><h4><span>Faits maison</span><em>02</em></h4><div class="pegs"><button type="button" class="tool home" data-m="casino" data-w="Outil d&#x27;aide à la décision que j&#x27;ai créé chez Casino pour les implantations." style="--i:17;--r:0.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Pickwise</span><small>Casino</small></span></button><button type="button" class="tool home" data-m="perso" data-w="App web perso : où se baigner à Djerba, heure par heure." style="--i:18;--r:-2.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Win N3oum</span><small>Perso</small></span></button></div></div>
+<div class="zone z-home" style="--span:3"><h4><span>Faits maison</span><em>03</em></h4><div class="pegs"><button type="button" class="tool home" data-m="casino" data-w="Outil d&#x27;aide à la décision que j&#x27;ai créé chez Casino pour les implantations." style="--i:17;--r:0.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Pickwise</span><small>Casino</small></span></button><button type="button" class="tool home" data-m="perso" data-w="App web perso : où se baigner à Djerba, heure par heure." style="--i:18;--r:-2.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Win N3oum</span><small>Perso</small></span></button><button type="button" class="tool home" data-m="perso" data-w="App web perso : simuler une journée d&#x27;entrepôt et savoir qui déplacer quand ça coince." style="--i:29;--r:1.6deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Crewline</span><small>Perso</small></span></button></div></div>
 <div class="zone z-sys" style="--span:7"><h4><span>Systèmes &amp; CAO</span><em>08</em></h4><div class="pegs"><button type="button" class="tool" data-m="ekium fanuc" data-w="Modélisation 3D chez Ekium, simulation de la ligne FANUC." style="--i:19;--r:1.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">SolidWorks</span><small>Ekium · FANUC</small></span></button><button type="button" class="tool" data-m="ekium" data-w="Modélisation 3D chez Ekium." style="--i:20;--r:-1deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Catia V5</span><small>Ekium</small></span></button><button type="button" class="tool" data-m="ekium" data-w="Calcul de structures chez Ekium." style="--i:21;--r:2.2deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">ANSYS</span><small>Ekium</small></span></button><button type="button" class="tool" data-m="fanuc" data-w="Simulation de la ligne robotisée, Olympiades FANUC." style="--i:22;--r:-1.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">RoboGuide</span><small>FANUC</small></span></button><button type="button" class="tool" data-m="fanuc" data-w="Agencement des postes de travail, Olympiades FANUC." style="--i:23;--r:0.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">AutoCAD</span><small>FANUC</small></span></button><button type="button" class="tool" data-m="formation ekium" data-w="Licence Génie Mécanique, puis calculs RDM chez Ekium." style="--i:24;--r:-2.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">RDM · CAO</span><small>Licence · Ekium</small></span></button><button type="button" class="tool" data-m="" data-w="Outil que je maîtrise." style="--i:25;--r:1.5deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">WMS</span><small>&nbsp;</small></span></button><button type="button" class="tool" data-m="" data-w="Formation en cours." style="--i:26;--r:-1deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">SAP</span><small>En formation</small></span></button></div></div>
 <div class="zone z-cert" style="--span:5"><h4><span>Certifications</span><em>02</em></h4><div class="pegs"><button type="button" class="tool cert yb" data-m="formation" data-w="Certifié Yellow Belt Lean Six Sigma en novembre 2024." style="--i:27;--r:2.2deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Yellow Belt Lean Six Sigma</span><small>Nov. 2024</small></span></button><button type="button" class="tool cert" data-m="formation" data-w="Certifié Scrum Master en février 2025." style="--i:28;--r:-1.8deg"><span class="shadow" aria-hidden="true"></span><span class="tag"><i class="hook" aria-hidden="true"></i><span class="tn">Certified Scrum Master</span><small>Févr. 2025</small></span></button></div></div>
       </div>
@@ -888,14 +965,13 @@ html.ld .loader.out{transform:translateY(-100%)}
   part.addEventListener('pointerleave', () => crd.textContent = 'Éch. 1:1');
   crd.textContent = 'Éch. 1:1';
 
-  /* ---------- Win N3oum stage tilt ---------- */
-  const stage = $('#stage');
-  if (fine && !reduce) {
+  /* ---------- Stage tilt (Win N3oum, Crewline) ---------- */
+  if (fine && !reduce) $$('.stage').forEach(stage => {
     stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
       stage.style.setProperty('--ry', (x * 10).toFixed(2) + 'deg'); stage.style.setProperty('--rx', (-y * 8).toFixed(2) + 'deg'); });
     stage.addEventListener('pointerleave', () => { stage.style.setProperty('--ry', '0deg'); stage.style.setProperty('--rx', '0deg'); });
-  }
+  });
 
   /* ---------- Scroll-driven: progress, marquee, career line, active nav ---------- */
   const prog = $('#progress'), track = $('#track'), flow = $('#flow');
@@ -1123,16 +1199,18 @@ const GROUPS = [
     { id: 'cas', n: 'Chef de Projet Planification des Flux & Méthodes', o: 'Casino Group', a: MI(2025, 9), b: MI(2026, 9), k: 'exp', crit: 1, d: 'Création de Pickwise, implantations sur 4 entrepôts (~30 000 références), tableaux de bord KPI.' } ] },
   { g: 'Projets', rows: [
     { id: 'fan', n: 'Conception & Automatisation', o: 'Olympiades FANUC · Paris-Saclay', a: MI(2024, 9), b: MI(2025, 6), k: 'prj', d: 'Ligne de production robotisée simulée sous SolidWorks et RoboGuide, postes agencés sous AutoCAD.' },
-    { id: 'wn', n: 'Win N3oum ?', o: 'Projet perso · app web', a: MI(2026, 9), b: MI(2026, 10), k: 'prj', live: 1, d: 'App web gratuite qui dit où se baigner à Djerba, heure par heure. Créée en septembre et octobre 2026, en ligne en version 1.1.3.' } ] }
+    { id: 'wn', n: 'Win N3oum ?', o: 'Projet perso · app web', a: MI(2026, 9), b: MI(2026, 10), k: 'prj', live: 1, d: 'App web gratuite qui dit où se baigner à Djerba, heure par heure. Créée en septembre et octobre 2026, en ligne en version 1.1.3.' },
+    { id: 'cw', n: 'Crewline', o: 'Projet perso · app web', a: MI(2026, 10), b: MI(2026, 10), k: 'prj', live: 1, d: 'Aide à la décision pour réaffecter une équipe d\'entrepôt : simulation minute par minute, plans de renfort, prévisions. En ligne en octobre 2026.' } ] }
 ];
 const MILES = [
   { m: MI(2024, 11) + .5, l: 'Yellow Belt Lean Six Sigma', d: 'nov. 2024' },
   { m: MI(2025, 2) + .5, l: 'Certified Scrum Master', d: 'févr. 2025' },
   { m: MI(2025, 6) + .99, l: 'Fin du Master', d: '2025' },
-  { m: MI(2026, 10) + .45, l: 'Win N3oum en ligne', d: 'oct. 2026', wn: 1 }
+  { m: MI(2026, 10) + .45, l: 'Win N3oum en ligne', d: 'oct. 2026', wn: 1 },
+  { m: MI(2026, 10) + .5, l: 'Crewline en ligne', d: 'oct. 2026', cw: 1 }
 ];
 const DEPS = [['lic', 'mas'], ['eki', 'auc'], ['mas', 'cas'], ['auc', 'cas']];
-const TODAY = MI(2026, 10) + 14 / 31;
+const TODAY = MI(2026, 10) + 17 / 31;
 const tip = $('#tip');
 const tipOn = (e, h) => { tip.innerHTML = h; tip.style.opacity = 1; tipMove(e); };
 const tipMove = e => { tip.style.left = Math.min(e.clientX + 14, innerWidth - 300) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; };
@@ -1180,7 +1258,8 @@ const KP = {
   eki: [['4', 'mois'], ['ANSYS', 'calcul de structures']],
   auc: [['+12 %', 'productivité'], ['80 k€', 'économies par an'], ['−45 %', 'erreurs'], ['120', 'opérateurs formés']],
   cas: [['4', 'entrepôts'], ['~30 000', 'références'], ['Pickwise', 'outil créé']],
-  fan: [['10', 'mois'], ['RoboGuide', 'simulation']], wn: [['v1.1.3', 'en ligne'], ['3', 'notes par plage'], ['4', 'modèles météo']]
+  fan: [['10', 'mois'], ['RoboGuide', 'simulation']], wn: [['v1.1.3', 'en ligne'], ['3', 'notes par plage'], ['4', 'modèles météo']],
+  cw: [['138', 'plans simulés'], ['23', 'tests auto'], ['0', 'serveur']]
 };
 const ALL = GROUPS.flatMap(g => g.rows);
 function build(host, uid, D0, D1, o = {}) {
@@ -1247,7 +1326,7 @@ function build(host, uid, D0, D1, o = {}) {
   const phLab = el('g', { opacity: 0 }, cg), phBox = el('rect', { y: TOP - 24, height: 18, rx: 9, fill: 'var(--blue)' }, phLab), phTxt = el('text', { y: TOP - 11, 'text-anchor': 'middle', class: 'mono', 'font-size': 10, fill: '#fff' }, phLab);
   const big = o.month ? el('text', { x: LX, y: 22, class: 'gt-month' }, svg) : null;
   el('line', { x1: LX, x2: RX, y1: lineY, y2: lineY, stroke: 'var(--ink)', 'stroke-width': 1.2 }, svg);
-  const msEls = ms.map((m, k) => { const cls = m.wn ? ' wn' : '', up = m.side < 0;
+  const msEls = ms.map((m, k) => { const cls = m.wn ? ' wn' : m.cw ? ' cw' : '', up = m.side < 0;
     const by = up ? lineY - LEAD - BOXH : lineY + LEAD, cx = clamp(m.x, m.bx + 14, m.bx + m.w - 14), ey = up ? by + BOXH : by, ky = up ? lineY - 12 : lineY + 12;
     const g = el('g', { style: `transform-box:view-box;transform-origin:${m.x}px ${lineY}px;transition:opacity .4s, transform .6s cubic-bezier(.3,1.6,.5,1)`, opacity: 0 }, svg);
     el('path', { d: `M${m.x} ${up ? lineY - 8 : lineY + 8} V${ky} L${cx} ${ey}`, fill: 'none', class: 'g-lead' + cls }, g);

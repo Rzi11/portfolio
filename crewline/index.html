@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Crewline</title>
+<meta name="description" content="Crewline rejoue ta journée d'entrepôt minute par minute, te dit où ça va coincer et propose qui déplacer. Gratuit, sans compte, tout reste dans ton navigateur.">
+<meta name="theme-color" content="#F2F0EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131517" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="assets/fonts/archivo-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/ibm-plex-mono-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Archivo";font-style:normal;font-display:swap;font-weight:100 900;font-stretch:62% 125%;src:url(assets/fonts/archivo-latin-standard-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Archivo";font-style:normal;font-display:swap;font-weight:100 900;font-stretch:62% 125%;src:url(assets/fonts/archivo-latin-ext-standard-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:500;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:600;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-600-normal.woff2) format("woff2")}
+
+/* Identité de l'app Crewline (src/styles.css) : béton, graphite, jaune sécurité,
+   une couleur par poste, comme des lignes. Le site pousse l'idée jusqu'au plan de métro. */
+:root{
+  --bg:#F2F0EA; --surface:#FFFFFF; --surface-2:#F8F7F3; --ink:#16181B; --muted:#5F5C55; --line:#DEDACF; --line-strong:#16181B;
+  --accent:#F5C400; --accent-ink:#16181B; --accent-soft:#FFF3C4;
+  --ok:#2E7D4F; --ok-soft:#E3F1E8; --bad:#C7361B; --bad-soft:#FBE1DA;
+  --s1:#1F6FB8; --s2:#E8590C; --s3:#0B7A6B; --s4:#7B4FD6; --s5:#C2185B; --s6:#5D7A00; --s7:#00838F; --s8:#8D6E63;
+  --hatch:#CFCAC0; --interim:#8E44AD;
+  --g:#16181B; --g2:#1F2226; --g-line:#33373D; --g-ink:#F2F0EA; --g-muted:#A8A49B; --coral:#FF7A5C;
+  --shadow:0 1px 0 rgba(22,24,27,.06),0 30px 60px -40px rgba(22,24,27,.45);
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:10px; --gut:max(20px,env(safe-area-inset-left,0px)); --ease:cubic-bezier(.2,.75,.1,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131517; --surface:#1C1F23; --surface-2:#22262B; --ink:#F2F0EA; --muted:#A8A49B; --line:#33373D; --line-strong:#F2F0EA;
+  --accent-soft:#3A3210; --ok:#5BC48A; --ok-soft:#173325; --bad:#FF7A5C; --bad-soft:#3E1D16;
+  --s1:#5AA2E6; --s2:#FF8A4C; --s3:#3CC3AE; --s4:#A88BF0; --s5:#F06292; --s6:#A4C639; --s7:#4DD0E1; --s8:#BCAAA4;
+  --hatch:#3D4249; --interim:#D7A6F0; --g:#0B0C0E; --g2:#17191C;
+  --shadow:0 1px 0 rgba(0,0,0,.4),0 30px 60px -36px rgba(0,0,0,.85); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131517; --surface:#1C1F23; --surface-2:#22262B; --ink:#F2F0EA; --muted:#A8A49B; --line:#33373D; --line-strong:#F2F0EA;
+  --accent-soft:#3A3210; --ok:#5BC48A; --ok-soft:#173325; --bad:#FF7A5C; --bad-soft:#3E1D16;
+  --s1:#5AA2E6; --s2:#FF8A4C; --s3:#3CC3AE; --s4:#A88BF0; --s5:#F06292; --s6:#A4C639; --s7:#4DD0E1; --s8:#BCAAA4;
+  --hatch:#3D4249; --interim:#D7A6F0; --g:#0B0C0E; --g2:#17191C;
+  --shadow:0 1px 0 rgba(0,0,0,.4),0 30px 60px -36px rgba(0,0,0,.85); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--display);-webkit-font-smoothing:antialiased;overflow-x:clip}
+h1,h2,h3,h4,p,ol,ul,figure{margin:0}
+ol,ul{padding:0;list-style:none}
+img{display:block;max-width:100%;height:auto}
+a{color:var(--ink);text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:3px}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1360px;margin:0 auto;padding-inline:var(--gut)}
+.mono{font-family:var(--data);font-variant-numeric:tabular-nums}
+.eyebrow{display:inline-flex;align-items:center;gap:12px;font-family:var(--data);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.eyebrow i{position:relative;width:34px;height:6px;border-radius:3px;background:var(--c,var(--s1))}
+.eyebrow i::after{content:"";position:absolute;right:-4px;top:-4px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:4px solid var(--c,var(--s1));box-sizing:border-box}
+.h2{font-size:clamp(38px,5.4vw,84px);font-weight:900;line-height:.98;letter-spacing:-.045em;text-wrap:balance}
+.lede{font-size:clamp(17px,1.35vw,20px);line-height:1.55;color:var(--muted);max-width:56ch}
+
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:700 16px/1 var(--display);padding:15px 22px;border-radius:8px;cursor:pointer;min-height:52px;text-decoration:none;white-space:nowrap;transition:background .15s,transform .15s,box-shadow .15s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-ink);box-shadow:0 4px 0 var(--accent-ink)}
+.btn.primary:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--accent-ink);background:var(--accent)}
+.btn.primary:active{transform:translateY(4px);box-shadow:0 0 0 var(--accent-ink)}
+.btn.small{min-height:40px;padding:10px 14px;font-size:14.5px}
+.btn.small.primary{box-shadow:0 3px 0 var(--accent-ink)}
+.btn.on-g{background:transparent;color:var(--g-ink);border-color:var(--g-line)}
+.btn.on-g:hover{border-color:var(--g-muted);background:transparent}
+
+/* ---------- intro : le logo se dessine ---------- */
+.intro{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;transition:clip-path .9s var(--ease),visibility 0s .9s}
+.intro.out{clip-path:inset(0 0 100% 0);visibility:hidden}
+.intro svg{width:min(34vw,220px);height:auto;overflow:visible}
+.intro path{fill:none;stroke-width:8;stroke-linecap:round}
+.intro .l1{stroke:var(--s1)}.intro .l2{stroke:var(--accent)}.intro .l3{stroke:var(--s5)}
+.intro p{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:500 12.5px var(--data);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.no-js .intro{display:none}
+
+/* ---------- en-tête : la barre de l'app, avec la progression comme une ligne ---------- */
+.top{position:fixed;inset:0 0 auto;z-index:50;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-top:env(safe-area-inset-top,0px)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:21px;letter-spacing:-.03em;text-decoration:none;color:var(--ink)}
+.top nav{display:flex;align-items:center;gap:2px;margin-left:auto}
+.top nav a{font-weight:700;font-size:14.5px;color:var(--muted);text-decoration:none;padding:9px 12px;border-radius:8px;transition:background .2s,color .2s}
+.top nav a:hover{color:var(--ink);background:var(--surface-2)}
+.top nav a[aria-current="true"]{background:var(--accent);color:var(--accent-ink)}
+.top .btn{margin-left:10px}
+.prog{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--line-strong)}
+.prog i{position:absolute;left:0;top:-2px;height:6px;width:0;background:linear-gradient(90deg,var(--s1),var(--s3),var(--s6),var(--accent),var(--s2),var(--s5),var(--s4));border-radius:0 3px 3px 0}
+.prog b{position:absolute;top:-6px;left:7px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--surface);border:3.5px solid var(--ink)}
+@media (max-width:980px){.top nav a{display:none}}
+
+/* ================= OUVERTURE ================= */
+.hero{position:relative;min-height:100svh;padding-top:calc(64px + env(safe-area-inset-top,0px));display:grid;grid-template-rows:auto 1fr auto}
+.hero-top{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px 56px;align-items:end;padding-top:clamp(28px,4.5svh,60px)}
+.hero h1{font-size:clamp(44px,min(5.5vw,10svh),104px);font-weight:900;line-height:.9;letter-spacing:-.055em}
+.hero h1 .ln{display:block;overflow:hidden;padding-bottom:.06em;margin-bottom:-.06em}
+.hero h1 .ln>span{display:block;transform:translateY(105%);transition:transform 1.1s var(--ease)}
+.hero h1 .ln:nth-child(2)>span{transition-delay:.08s}.hero h1 .ln:nth-child(3)>span{transition-delay:.16s}
+.hero h1 .hl{background:linear-gradient(transparent 80%,var(--accent) 80%,var(--accent) 97%,transparent 97%)}
+.ready .hero h1 .ln>span{transform:none}
+.hero-side{display:grid;gap:22px;padding-bottom:10px;opacity:0;transform:translateY(12px);transition:opacity .8s .5s,transform .8s .5s var(--ease)}
+.ready .hero-side{opacity:1;transform:none}
+.hero-act{display:flex;flex-wrap:wrap;gap:12px}
+.map{position:relative;margin-top:clamp(18px,3svh,36px);min-height:340px}
+.map canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.labels{position:absolute;inset:0;pointer-events:none}
+.labels span{position:absolute;left:var(--gut);transform:translateY(-50%);display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .6s}
+.labels span i{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+.ready .labels span{opacity:1}
+.tags{position:absolute;inset:0;pointer-events:none}
+.tag{position:absolute;transform:translate(-50%,-100%);background:var(--ink);color:var(--bg);font-size:13px;font-weight:700;padding:7px 10px 7px 9px;border-radius:7px;white-space:nowrap;opacity:0;transition:opacity .5s,transform .6s var(--ease);display:flex;align-items:center;gap:8px}
+.tag b{font-family:var(--data);font-weight:600;color:var(--accent)}
+.tag::after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:var(--ink);transform:translateX(-50%) rotate(45deg)}
+.tag.on{opacity:1;transform:translate(-50%,calc(-100% - 10px))}
+.hero{position:relative}
+.score{position:absolute;right:var(--gut);bottom:64px;z-index:2;display:flex;align-items:stretch;background:var(--surface);border:2px solid var(--line-strong);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s var(--ease)}
+.score.on{opacity:1;transform:none}
+.score div{padding:12px 16px;display:grid;gap:2px}
+.score div+div{border-left:1px solid var(--line)}
+.score .k{font-size:12.5px;font-weight:700;color:var(--muted)}
+.score .v{font-family:var(--data);font-size:28px;font-weight:600;line-height:1}
+.score .plan{background:var(--accent);color:var(--accent-ink)}
+.score .plan .k{color:var(--accent-ink);opacity:.75}
+.axis{position:relative;height:26px;margin-inline:var(--gut);border-top:1px solid var(--line)}
+.axis span{position:absolute;top:6px;transform:translateX(-50%);font:500 12px var(--data);color:var(--muted)}
+.tip{position:fixed;z-index:60;pointer-events:none;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .12s;white-space:nowrap}
+.tip b{display:block;font-size:14px}
+.tip .mono{font-size:12px;color:var(--muted)}
+.tip.it b{color:var(--interim)}
+@media (max-width:900px){.hero-top{grid-template-columns:1fr}.labels{display:none}.score{position:relative;left:auto;right:auto;bottom:auto;margin:10px var(--gut) 0;display:inline-flex}.score .v{font-size:22px}.map{min-height:300px}}
+
+/* ================= LA JOURNÉE AU DÉFILEMENT ================= */
+.day{position:relative;height:640svh;background:var(--bg);border-top:2px solid var(--line-strong)}
+.day-stage{position:sticky;top:0;height:100svh;padding-top:calc(64px + env(safe-area-inset-top,0px));display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+.day-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px 36px;align-items:end;padding-top:clamp(14px,2.4svh,30px)}
+.clock{font-weight:900;font-size:clamp(64px,min(11vw,15svh),180px);line-height:.8;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
+.day-head .ctx{display:grid;gap:8px;padding-bottom:6px;max-width:44ch}
+.day-head .ctx b{font-size:15px}
+.day-head .ctx span{font-size:14.5px;color:var(--muted)}
+.race{display:flex;gap:10px;padding-bottom:4px}
+.race div{border:2px solid var(--line-strong);border-radius:var(--r);padding:10px 14px;min-width:150px;background:var(--surface);display:grid;gap:2px}
+.race .k{font-size:12.5px;font-weight:700;color:var(--muted)}
+.race .v{font-family:var(--data);font-size:clamp(28px,3vw,44px);font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.race .base .v{color:var(--bad)}
+.race .plan{background:var(--accent);color:var(--accent-ink)}
+.race .plan .k{color:var(--accent-ink);opacity:.75}
+.race .q{font-size:12.5px;color:var(--muted)}
+.race .q b{font-family:var(--data);font-weight:600;color:var(--ink)}
+.race .plan .q{color:var(--accent-ink);opacity:.8}
+.race .plan .q b{color:var(--accent-ink)}
+.race .v::after{content:" en retard";font:600 12.5px var(--display);letter-spacing:0;margin-left:6px;opacity:.7}
+.day-map{position:relative;margin-top:clamp(10px,2svh,22px)}
+.day-map canvas{position:absolute;inset:0;width:100%;height:100%}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);pointer-events:none}
+.playhead::before{content:"";position:absolute;top:-6px;left:-6px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--ink)}
+.stops{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.stop{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--bad)}
+.stop.move{border-left-color:var(--ink);border-left-style:dotted}
+.stop span{position:absolute;top:8px;left:6px;font-size:12px;font-weight:700;background:var(--bad);color:#fff;padding:3px 7px;border-radius:4px;white-space:nowrap}
+.stop.move span{background:var(--ink);color:var(--accent)}
+.day-foot{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 28px;align-items:end;padding-block:14px clamp(16px,3svh,30px)}
+.caption{position:relative;min-height:3.2em}
+.caption p{font-size:clamp(22px,2.4vw,36px);font-weight:900;line-height:1.1;letter-spacing:-.03em;max-width:30ch;transition:opacity .35s,transform .45s var(--ease)}
+.caption p.out{opacity:0;transform:translateY(8px)}
+.caption small{display:inline-block;font:600 12.5px var(--data);background:var(--ink);color:var(--accent);padding:4px 8px;border-radius:5px;margin-bottom:10px}
+.mini{width:min(360px,40vw);display:grid;gap:6px}
+.mini-track{position:relative;height:30px;border-radius:6px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.mini-track canvas{position:absolute;inset:0;width:100%;height:100%}
+.mini-win{position:absolute;top:-1px;bottom:-1px;border:2px solid var(--ink);border-radius:6px;background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.mini-lab{display:flex;justify-content:space-between;font:500 11.5px var(--data);color:var(--muted)}
+@media (max-width:900px){
+  .day-head{grid-template-columns:1fr;gap:10px}
+  .day-head .ctx{display:none}
+  .race{gap:8px}
+  .race div{min-width:0;flex:1;padding:8px 10px}
+  .race .v{font-size:24px}
+  .clock{font-size:clamp(56px,17vw,90px)}
+  .day-foot{grid-template-columns:1fr}
+  .mini{display:none}
+  .stop span{font-size:11px}
+}
+
+/* ================= LES STATIONS ================= */
+.stations{position:relative;border-top:2px solid var(--line-strong)}
+.st-head{padding-block:clamp(88px,10vw,140px) clamp(28px,4vw,48px)}
+.st-head .wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px 56px;align-items:end}
+.st-head .eyebrow{margin-bottom:18px}
+.st-run{position:relative;height:500svh}
+.st-stage{position:sticky;top:0;height:100svh;padding-top:calc(64px + env(safe-area-inset-top,0px));overflow:hidden;display:grid;grid-template-rows:auto 1fr;grid-template-columns:100%}
+.st-line{position:relative;height:74px;margin-inline:var(--gut)}
+.st-line::before{content:"";position:absolute;left:0;right:0;top:30px;height:8px;border-radius:4px;background:var(--line)}
+.st-line .fill{position:absolute;left:0;top:30px;height:8px;border-radius:4px;background:var(--ink);width:0}
+.st-line .stp{position:absolute;top:22px;transform:translateX(-50%);display:grid;justify-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer;color:var(--muted)}
+.st-line .stp i{width:24px;height:24px;border-radius:50%;background:var(--bg);border:6px solid var(--line);transition:border-color .3s,background .3s,transform .3s}
+.st-line .stp span{font-size:13.5px;font-weight:800;white-space:nowrap}
+.st-line .stp.done i{border-color:var(--ink)}
+.st-line .stp.on{color:var(--ink)}
+.st-line .stp.on i{border-color:var(--ink);background:var(--accent);transform:scale(1.25)}
+.st-track{display:flex;gap:clamp(40px,8vw,140px);padding:clamp(14px,2.5svh,30px) var(--gut) 24px;will-change:transform;align-items:stretch}
+.card{flex:0 0 min(calc(100vw - 2 * var(--gut)),1240px);display:grid;grid-template-columns:minmax(260px,.62fr) minmax(0,1.6fr);gap:clamp(20px,3vw,44px);align-items:center;min-height:0}
+.card .txt{display:grid;gap:14px;align-content:center}
+.card .n{font:600 13px var(--data);color:var(--muted)}
+.card h3{font-size:clamp(30px,3vw,48px);font-weight:900;line-height:1;letter-spacing:-.04em}
+.card .q{font-size:clamp(18px,1.5vw,22px);font-weight:700}
+.card p{color:var(--muted);font-size:16px;max-width:40ch}
+.card .say{font-size:16px;font-weight:700;color:var(--ink);border-left:6px solid var(--accent);padding-left:12px}
+.card .shot{background:var(--surface);border:2px solid var(--line-strong);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;max-height:calc(100svh - 64px - 74px - 90px);display:flex;align-items:flex-start}
+.card .shot img{width:100%}
+@media (max-width:1000px){
+  .st-head .wrap{grid-template-columns:1fr}
+  .st-run{height:auto}
+  .st-stage{position:static;height:auto;padding-top:0;display:block}
+  .st-line{display:none}
+  .st-track{flex-direction:column;transform:none!important;padding-bottom:clamp(64px,8vw,100px)}
+  .card{flex:none;grid-template-columns:1fr}
+  .card .shot{max-height:none}
+}
+
+/* ================= BLACK FRIDAY ================= */
+.bf{background:var(--g);color:var(--g-ink);padding-block:clamp(96px,11vw,160px)}
+.bf .lede{color:var(--g-muted)}
+.bf .eyebrow{color:var(--g-muted)}
+.bf .eyebrow i::after{background:var(--g)}
+.bf-head{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px 56px;align-items:end;margin-bottom:clamp(40px,5vw,64px)}
+.bf-head .eyebrow{margin-bottom:18px}
+.chart{position:relative;overflow-x:auto;background:var(--g2);border:1px solid var(--g-line);border-radius:14px;padding:clamp(16px,2vw,28px)}
+.chart-top{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.chart-top h3{font-size:19px;font-weight:800}
+.leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--g-muted)}
+.leg span{display:inline-flex;align-items:center;gap:8px}
+.leg i{width:22px;height:5px;border-radius:3px}
+#race{display:block;width:100%;height:auto;overflow:visible}
+#race .grid{stroke:var(--g-line);stroke-width:1}
+#race .ax{fill:var(--g-muted);font:500 12px var(--data)}
+#race .curve{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+#race .end{font:600 15px var(--data)}
+#race .stopc{fill:var(--g2);stroke:var(--coral);stroke-width:3}
+#race .stopl{fill:var(--g-ink);font:600 11.5px var(--display)}
+#race .stopt{fill:var(--coral);font:600 11px var(--data)}
+#race .rail{stroke:var(--coral);stroke-width:5;stroke-linecap:round;opacity:.35}
+.bf-nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:clamp(32px,4vw,48px);border-top:1px solid var(--g-line)}
+.bf-nums div{padding:18px 18px 4px 0;display:grid;gap:4px}
+.bf-nums div+div{padding-left:18px;border-left:1px solid var(--g-line)}
+.bf-nums b{font-size:clamp(32px,3.4vw,52px);font-weight:900;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.bf-nums span{font-size:14.5px;color:var(--g-muted)}
+.bf-moves{margin-top:clamp(32px,4vw,48px);display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:24px 56px;align-items:start}
+.bf-moves h3{font-size:22px;font-weight:900;letter-spacing:-.03em}
+.bf-moves p{color:var(--g-muted);font-size:15.5px;margin-top:8px}
+.bf-moves ol{display:grid;border-top:1px solid var(--g-line)}
+.bf-moves li{display:grid;grid-template-columns:70px 1fr;gap:14px;padding:13px 0;border-bottom:1px solid var(--g-line);font-size:16px;align-items:baseline}
+.bf-moves li b{font:600 14px var(--data);color:var(--accent)}
+.bf-moves li span{color:var(--g-muted)}
+.bf-moves li span strong{color:var(--g-ink)}
+@media (max-width:900px){#race{min-width:760px}.bf-head,.bf-moves{grid-template-columns:1fr}.bf-nums{grid-template-columns:1fr 1fr}.bf-nums div:nth-child(3){padding-left:0;border-left:0}}
+
+/* ================= SUIVI ET IA ================= */
+.sec{padding-block:clamp(96px,11vw,160px)}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px 56px;align-items:end;margin-bottom:clamp(40px,5vw,64px)}
+.sec-head .eyebrow{margin-bottom:18px}
+@media (max-width:900px){.sec-head{grid-template-columns:1fr}}
+.fc{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,.85fr);gap:28px clamp(28px,4vw,56px);align-items:start}
+.shot2{background:var(--surface);border:2px solid var(--line-strong);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.cap{margin-top:12px;font-size:13.5px;color:var(--muted)}
+.fc-side{display:grid;gap:0;border-top:2px solid var(--line-strong)}
+.fc-side .st{padding:18px 0;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.fc-side .st b{font-size:clamp(44px,4.4vw,68px);font-weight:900;line-height:.92;letter-spacing:-.05em}
+.fc-side .st span{font-size:15px;color:var(--muted)}
+.pledge{margin-top:18px;display:flex;align-items:center;gap:12px;font-weight:800;font-size:17px}
+.pledge::before{content:"";width:40px;height:6px;border-radius:3px;background:var(--interim);flex:none}
+.bricks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:clamp(56px,7vw,96px);border-top:2px solid var(--line-strong)}
+.brick{padding:24px 24px 8px 0;display:grid;gap:10px;align-content:start}
+.brick+.brick{padding-left:24px;border-left:1px solid var(--line)}
+.brick .eyebrow{font-size:11.5px}
+.brick h3{font-size:24px;font-weight:900;letter-spacing:-.03em}
+.brick p{color:var(--muted);font-size:15.5px}
+.brick .dictee{font-family:var(--data);font-size:13.5px;line-height:1.55;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;color:var(--ink)}
+.pill{justify-self:start;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--ink);color:var(--bg)}
+.pill.soft{background:var(--accent-soft);color:var(--ink)}
+@media (max-width:1000px){.fc{grid-template-columns:1fr}.bricks{grid-template-columns:1fr}.brick,.brick+.brick{padding:22px 0;border-left:0;border-bottom:1px solid var(--line)}}
+
+/* garanties */
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 48px}
+.checks li{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:16px 0;border-top:1px solid var(--line);font-weight:700;font-size:16.5px}
+.checks li::before{content:"";width:24px;height:24px;border-radius:6px;background:var(--ok-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 12.5l3.5 3.3 7.5-7.6' fill='none' stroke='%232E7D4F' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat}
+.checks li span{display:block;font-weight:400;font-size:15px;color:var(--muted);margin-top:2px}
+@media (max-width:800px){.checks{grid-template-columns:1fr}}
+
+/* ================= ACCÈS ================= */
+.ruled{border-top:2px solid var(--line-strong)}
+.open{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+.go{position:relative;background:var(--accent);color:var(--accent-ink);border:2px solid var(--line-strong);border-radius:14px;padding:clamp(24px,3vw,40px);display:grid;gap:18px;align-content:space-between;overflow:hidden}
+.go h3{font-size:clamp(40px,5vw,76px);font-weight:900;line-height:.92;letter-spacing:-.05em;max-width:9ch}
+.go ul{display:grid;gap:6px;font-size:16px}
+.go li{padding-left:18px;position:relative}
+.go li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:50%;background:currentColor}
+.go .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.go .btn{background:var(--ink);color:var(--accent);border-color:var(--ink);box-shadow:none}
+.go small{font:500 13px var(--data);opacity:.75;overflow-wrap:anywhere}
+.go svg.deco{position:absolute;right:-30px;top:24px;width:46%;opacity:.9;pointer-events:none}
+.side{display:grid;gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;display:grid;gap:12px;align-content:start}
+.box h3{font-size:22px;font-weight:900;letter-spacing:-.03em}
+.box p{font-size:15.5px;color:var(--muted)}
+.qr{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center}
+#qr{width:104px;height:104px;background:#fff;border-radius:8px;padding:7px;border:1px solid var(--line);display:grid;place-items:center}
+#qr svg{width:100%;height:100%}
+.os{display:flex;gap:2px;background:var(--surface-2);border-radius:8px;padding:3px;justify-self:start}
+.os button{appearance:none;border:0;background:transparent;font:700 13.5px var(--display);color:var(--muted);padding:8px 12px;border-radius:6px;cursor:pointer}
+.os button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.howto{counter-reset:h;display:grid;gap:7px}
+.howto li{counter-increment:h;padding-left:30px;position:relative;font-size:15px;color:var(--muted)}
+.howto li::before{content:counter(h);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;border:1.5px solid var(--ink);color:var(--ink);font:600 11.5px/18px var(--data);text-align:center}
+.howto b{color:var(--ink)}
+.phones{margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px 28px 0;overflow:hidden}
+.phones h3{font-size:24px;font-weight:900;letter-spacing:-.03em;margin-bottom:8px}
+.phones p{color:var(--muted);max-width:40ch;padding-bottom:28px}
+.phones .pp{display:flex;gap:18px;justify-content:center}
+.phones img{width:46%;max-width:250px;border-radius:26px 26px 0 0;border:7px solid var(--ink);border-bottom:0;background:var(--ink);aspect-ratio:780/1100;object-fit:cover;object-position:top}
+.contact{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.contact .box{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.mail{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mail span{font-family:var(--data);font-size:14.5px;word-break:break-all;user-select:all}
+@media (max-width:900px){.open,.contact,.phones{grid-template-columns:1fr}.contact .box{grid-template-columns:1fr}.phones{padding:22px 18px 0}.go svg.deco{display:none}}
+
+/* questions */
+.fq{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:28px clamp(28px,5vw,72px);align-items:start}
+.limits{margin-top:28px;border-top:2px solid var(--line-strong)}
+.limits h3{font-size:16px;font-weight:800;padding:14px 0 6px}
+.limits li{font-size:15px;color:var(--muted);padding:9px 0;border-top:1px solid var(--line)}
+details{border-top:1px solid var(--line)}
+details:last-child{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;list-style:none;padding:20px 0;font-weight:700;font-size:18px;display:flex;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--data);flex:none;width:24px;height:24px;display:inline-grid;place-items:center;border:1.5px solid var(--line);border-radius:6px;font-weight:500}
+details[open] summary::before{content:"−"}
+details p{padding:0 0 22px 36px;color:var(--muted);max-width:66ch;font-size:16px}
+@media (max-width:900px){.fq{grid-template-columns:1fr}}
+
+/* pied */
+.foot{background:var(--g);color:var(--g-ink);padding-block:clamp(80px,10vw,140px) 28px;overflow:hidden}
+.foot-grid{display:grid;grid-template-columns:minmax(0,1.3fr) auto;gap:28px;align-items:end}
+.foot h2{font-size:clamp(40px,6vw,96px);font-weight:900;line-height:.95;letter-spacing:-.05em;max-width:14ch}
+.foot .btns{display:flex;flex-wrap:wrap;gap:12px}
+.lanes{margin-top:clamp(56px,8vw,110px)}
+.lanes svg{width:100%;height:auto;display:block;overflow:visible}
+.lanes path{fill:none;stroke-width:14;stroke-linecap:round}
+.wordmark{font-weight:900;font-size:clamp(72px,18vw,300px);line-height:.78;letter-spacing:-.07em;margin-top:clamp(28px,4vw,56px);color:var(--g-ink)}
+.foot-bottom{margin-top:28px;padding-top:20px;border-top:1px solid var(--g-line);display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;font-size:14px;color:var(--g-muted)}
+.foot-bottom a{color:var(--g-muted);text-decoration:none}
+.foot-bottom a:hover{color:var(--g-ink)}
+.foot-bottom nav{display:flex;gap:20px;flex-wrap:wrap}
+@media (max-width:800px){.foot-grid{grid-template-columns:1fr}}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.hero h1 .ln>span{transform:none}.hero-side{opacity:1;transform:none}.intro{display:none}}
+</style>
+</head>
+<body class="no-js">
+<script>document.body.classList.remove('no-js');</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="logo" viewBox="0 0 84 84"><rect width="84" height="84" rx="16" fill="#F5C400"/><path d="M16 24 H68" stroke="#16181B" stroke-width="8" stroke-linecap="round"/><path d="M16 42 H30 C42 42 42 60 54 60 H68" fill="none" stroke="#16181B" stroke-width="8" stroke-linecap="round"/><path d="M16 60 H24" stroke="#16181B" stroke-width="8" stroke-linecap="round" opacity=".35"/><circle cx="68" cy="42" r="5" fill="#16181B" opacity=".35"/></symbol>
+</defs></svg>
+
+<div class="intro" id="intro" aria-hidden="true">
+  <svg viewBox="0 0 84 84"><path class="l1" d="M16 24 H68"/><path class="l2" d="M16 42 H30 C42 42 42 60 54 60 H68"/><path class="l3" d="M16 60 H24"/></svg>
+  <p>Crewline</p>
+</div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#haut" aria-label="Crewline, haut de page"><svg width="30" height="30" aria-hidden="true"><use href="#logo"/></svg>Crewline</a>
+    <nav aria-label="Sections">
+      <a href="#journee" data-nav>La journée</a>
+      <a href="#ecrans" data-nav>Les écrans</a>
+      <a href="#black-friday" data-nav>Black Friday</a>
+      <a href="#suivi" data-nav>Suivi et IA</a>
+      <a href="#acces" data-nav>Accès</a>
+    </nav>
+    <a class="btn small primary js-app" href="crewline-autonome.html">Ouvrir Crewline</a>
+  </div>
+  <div class="prog" aria-hidden="true"><i id="progFill"></i><b id="progHead"></b></div>
+</header>
+
+<main id="haut">
+<!-- ================= OUVERTURE : la journée du Hub, une ligne par personne ================= -->
+<section class="hero" aria-labelledby="h1">
+  <div class="wrap hero-top">
+    <h1 id="h1"><span class="ln"><span>Le bon renfort,</span></span><span class="ln"><span>au bon poste,</span></span><span class="ln"><span>à la <span class="hl">bonne heure.</span></span></span></h1>
+    <div class="hero-side">
+      <p class="lede">Une absence, une vente flash, un trieur en panne : Crewline rejoue ta journée d'entrepôt minute par minute, te dit où ça va coincer et propose qui déplacer. C'est toi qui décides.</p>
+      <div class="hero-act"><a class="btn primary js-app" href="crewline-autonome.html">Ouvrir Crewline</a><a class="btn" href="#journee">Voir une journée</a></div>
+    </div>
+  </div>
+  <div class="map" id="heroMap" role="img" aria-label="Plan de la journée d'un hub e-commerce : 55 personnes, une ligne colorée par personne, une couleur par poste. Louise change de voie à 7:45 vers l'emballage multi, Manon renforce le picking mono de 9:00 à 10:00 : 169 retards évités.">
+    <canvas id="heroCanvas"></canvas>
+    <div class="labels" id="heroLabels"></div>
+    <div class="tags" id="heroTags"></div>
+  </div>
+  <div class="axis" id="heroAxis" aria-hidden="true"></div>
+  <div class="score" id="heroScore"><div><span class="k">Sans rien changer</span><span class="v">169</span></div><div class="plan"><span class="k">Avec le plan Crewline</span><span class="v">0</span></div></div>
+</section>
+
+<!-- ================= LA JOURNÉE AU DÉFILEMENT ================= -->
+<section class="day" id="journee" aria-labelledby="h-day">
+  <div class="day-stage">
+    <div class="wrap day-head">
+      <div class="clock" id="clock" aria-hidden="true">06:00</div>
+      <div class="ctx"><span class="eyebrow" style="--c:var(--s5)"><i></i>Une vraie journée</span><b id="h-day">Hub e-commerce, 55 personnes, 3 296 commandes, quatre heures limites de transporteurs.</b><span>Fais défiler : tu avances dans la journée telle que le moteur de Crewline l'a simulée.</span></div>
+      <div class="race"><div class="base"><span class="k">Sans rien changer</span><span class="v" id="lateBase">0</span><span class="q"><b id="qBase">0</b> en attente</span></div><div class="plan"><span class="k">Avec le plan</span><span class="v" id="latePlan">0</span><span class="q"><b id="qPlan">0</b> en attente</span></div></div>
+    </div>
+    <div class="day-map" id="dayMap"><canvas id="dayCanvas"></canvas><div class="stops" id="dayStops"></div><div class="playhead" id="playhead"></div></div>
+    <div class="wrap day-foot">
+      <div class="caption" aria-live="polite"><small id="capTime">06:00</small><p id="capText">Lucas et Nour, intérimaires au picking mono, ne viennent pas.</p></div>
+      <div class="mini" aria-hidden="true"><div class="mini-track"><canvas id="miniCanvas"></canvas><div class="mini-win" id="miniWin"></div></div><div class="mini-lab"><span>06:00</span><span>10:00</span><span>14:00</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LES ÉCRANS, COMME DES STATIONS ================= -->
+<section class="stations" id="ecrans" aria-labelledby="h-st">
+  <div class="st-head"><div class="wrap">
+    <div><span class="eyebrow" style="--c:var(--s3)"><i></i>Les écrans</span><h2 class="h2" id="h-st">Une ligne, cinq stations</h2></div>
+    <p class="lede">Tu règles ton entrepôt une fois. Ensuite, chaque matin et à chaque imprévu, l'app suit toujours le même trajet : ce qui arrive, où ça coince, qui déplacer.</p>
+  </div></div>
+  <div class="st-run" id="stRun">
+    <div class="st-stage">
+      <div class="st-line" id="stLine"><div class="fill" id="stFill"></div></div>
+      <div class="st-track" id="stTrack">
+        <article class="card"><div class="txt"><span class="n">Station 1 · une fois</span><h3>Entrepôt</h3><p class="q">Comment le travail circule ?</p><p>Pour chaque poste, ce qui doit être fini avant qu'il commence. Le schéma se dessine tout seul : postes en ligne, branches qui se rejoignent, flux séparés pour les clients et les fournisseurs.</p></div>
+          <div class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/flow-dark.webp"><img src="assets/shots/flow.webp" width="1400" height="719" alt="Schéma du flux du hub : seize postes reliés comme des lignes de métro." loading="lazy"></picture></div></article>
+        <article class="card"><div class="txt"><span class="n">Station 2 · chaque matin</span><h3>Journée</h3><p class="q">Qu'est-ce qui arrive ?</p><p>Une ligne par vague : l'arrivée des commandes, le travail restant, l'heure limite du transporteur. Les imprévus se posent sur la même frise.</p></div>
+          <div class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/day-dark.webp"><img src="assets/shots/day.webp" width="1600" height="862" alt="Frise des onze vagues de la journée avec leurs heures limites et les imprévus." loading="lazy"></picture></div></article>
+        <article class="card"><div class="txt"><span class="n">Station 3 · chaque matin</span><h3>Diagnostic</h3><p class="q">Où ça coince ?</p><p class="say">« Emballage multi n'aura pas assez de monde entre 06:35 et 13:20 : il manque au moins 1 renfort. »</p><p>Une phrase, puis la charge de chaque poste, créneau par créneau. Le rouge est réservé aux fenêtres vraiment en défaut.</p></div>
+          <div class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/heat-dark.webp"><img src="assets/shots/heat.webp" width="1600" height="1108" alt="Grille de charge par poste et par heure : l'emballage multi et le picking mono en rouge entre 8 h et 12 h." loading="lazy"></picture></div></article>
+        <article class="card"><div class="txt"><span class="n">Station 4 · à chaque imprévu</span><h3>Plans</h3><p class="q">Qui je déplace ?</p><p>Trois plans calculés, et le tien. Chacun dit ce qu'il gagne, ce qu'il coûte au poste de départ et les minutes de trajet. Rien n'est appliqué sans toi.</p></div>
+          <div class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/plans-dark.webp"><img src="assets/shots/plans.webp" width="1600" height="439" alt="Trois plans : ne rien changer 169 retards, un seul renfort 41, moins de retards 0." loading="lazy"></picture></div></article>
+        <article class="card"><div class="txt"><span class="n">Station 5 · chaque soir</span><h3>Suivi</h3><p class="q">Qu'annoncent tes journées passées ?</p><p>Chaque journée enregistrée nourrit les prévisions du lendemain : le risque d'absence ou de retard par poste et par heure, et le volume attendu.</p></div>
+          <div class="shot"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/forecast-dark.webp"><img src="assets/shots/forecast.webp" width="1600" height="1208" alt="Prévision du lundi : risque d'absence et de retard par poste et par heure." loading="lazy"></picture></div></article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BLACK FRIDAY ================= -->
+<section class="bf" id="black-friday" aria-labelledby="h-bf">
+  <div class="wrap">
+    <div class="bf-head">
+      <div><span class="eyebrow" style="--c:var(--coral)"><i></i>Stress test</span><h2 class="h2" id="h-bf">Une journée volontairement impossible</h2></div>
+      <p class="lede">Une plateforme logistique à quatre clients, un Black Friday de 5 h à 17 h, dix imprévus en cascade. Voici la course entre ne rien faire et suivre le plan, telle que le moteur l'a calculée.</p>
+    </div>
+    <div class="chart">
+      <div class="chart-top"><h3>Commandes en retard, cumulées au fil de la journée</h3><div class="leg"><span><i style="background:var(--coral)"></i>Sans rien changer</span><span><i style="background:var(--accent)"></i>Avec le plan de Crewline, 5 renforts</span></div></div>
+      <svg id="race" viewBox="0 0 1200 580" role="img" aria-label="Courbes des retards cumulés de 5 h à 17 h : 1 248 commandes en retard sans changement, 330 avec le plan. Dix imprévus marqués sur l'axe du temps."></svg>
+    </div>
+    <div class="bf-nums">
+      <div><b>26</b><span>postes, trieur plafonné à 1 300 colis/h</span></div>
+      <div><b>9 016</b><span>commandes, 25 vagues</span></div>
+      <div><b>127</b><span>personnes, dont 45 intérimaires</span></div>
+      <div><b>138</b><span>plans simulés minute par minute, en une dizaine de secondes</span></div>
+    </div>
+    <div class="bf-moves">
+      <div><h3>Les cinq renforts</h3><p>Avec des cadences 15 % plus basses, le même plan fait encore passer les retards de 2 585 à 2 051. Les cadences de l'exemple sont fictives.</p></div>
+      <ol>
+        <li><b>05:45</b><span><strong>Assia</strong> part au picking mono (lots)</span></li>
+        <li><b>08:00</b><span><strong>Romane</strong> part au chargement messagerie</span></li>
+        <li><b>09:45</b><span><strong>Naël</strong> part au trieur colis</span></li>
+        <li><b>10:45</b><span><strong>Anis</strong> et <strong>Mohamed</strong> partent à l'emballage mono</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SUIVI ET IA ================= -->
+<section class="sec" id="suivi" aria-labelledby="h-sv">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="eyebrow" style="--c:var(--interim)"><i></i>Suivi, prévisions et IA</span><h2 class="h2" id="h-sv">Chaque journée apprend à la suivante</h2></div>
+      <p class="lede">Enregistre tes journées. Crewline en tire des prévisions, calculées dans ton navigateur : où une absence ou un retard risque de commencer, et combien de commandes attendre.</p>
+    </div>
+    <div class="fc">
+      <figure><div class="shot2"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/forecast-dark.webp"><img src="assets/shots/forecast.webp" width="1600" height="1208" alt="Écran Suivi : prévision du lundi et grilles de risque par poste et par heure." loading="lazy"></picture></div><figcaption class="cap">Sur six mois d'historique d'exemple (fictif).</figcaption></figure>
+      <div>
+        <div class="fc-side">
+          <div class="st"><b>68 %</b><span>des retards réels tombent dans les 20 % de créneaux jugés les plus risqués. Au hasard, ce serait 20 %.</span></div>
+          <div class="st"><b>32 %</b><span>pour les absences, plus rares et plus dures à prévoir.</span></div>
+          <div class="st"><b>62 %</b><span>d'erreur en moins sur le volume par heure qu'une simple moyenne.</span></div>
+        </div>
+        <p class="pledge">Par poste et par créneau, jamais par personne nommée.</p>
+        <p class="cap">Test honnête : les modèles apprennent sur les premiers jours et sont jugés sur les suivants, qu'ils n'ont jamais vus.</p>
+      </div>
+    </div>
+    <div class="bricks">
+      <div class="brick"><span class="eyebrow" style="--c:var(--s1)"><i></i>Recherche opérationnelle</span><h3>Le moteur de décision</h3><p>Il simule la journée minute par minute et explore des centaines de plans. Aucune réponse inventée : tout est calculé, déterministe et vérifiable.</p><span class="pill">Vérifié par 23 tests automatiques</span></div>
+      <div class="brick"><span class="eyebrow" style="--c:var(--s3)"><i></i>Apprentissage automatique</span><h3>Les prévisions</h3><p>Trois modèles entraînés dans ton navigateur : le risque par poste et par heure, le volume attendu, et ce que vaut une personne sur un poste qui n'est pas le sien.</p><span class="pill soft">Rien ne quitte ton navigateur</span></div>
+      <div class="brick"><span class="eyebrow" style="--c:var(--interim)"><i></i>IA générative</span><h3>La saisie à la voix</h3><p>Dicte ton équipe, photographie un planning ou colle un tableau. Tu valides chaque changement avant qu'il s'applique.</p><p class="dictee">« Inès, préparation, arrivée 8h, départ 12h, pause 9h30 15 minutes, sait faire emballage cadence 35. »</p><span class="pill soft">Gemini gratuit, ou lecture locale sans clé</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GARANTIES ================= -->
+<section class="sec ruled" aria-labelledby="h-gr">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="eyebrow" style="--c:var(--ok)"><i></i>Ce que vérifient les tests</span><h2 class="h2" id="h-gr">Ce que le moteur ne fait jamais</h2></div>
+      <p class="lede">23 tests automatiques tournent à chaque version du moteur, dont un stress test complet.</p>
+    </div>
+    <ul class="checks">
+      <li><div>Recommander un plan pire que de ne rien faire<span>Le plan recommandé est toujours au moins aussi bon que la journée prévue.</span></div></li>
+      <li><div>Produire pendant une pause, une absence, un trajet ou une panne<span>Une personne qui change de poste ne travaille pas pendant le trajet.</span></div></li>
+      <li><div>Perdre ou inventer une commande<span>Chaque commande entrée ressort, dans l'ordre de son parcours.</span></div></li>
+      <li><div>Laisser la première personne de la liste tout faire<span>À poste égal, celle qui a le moins travaillé se sert en premier.</span></div></li>
+      <li><div>Dépasser les places ou le plafond d'un poste<span>Un trieur à 1 300 colis/h reste à 1 300, quel que soit le nombre de personnes.</span></div></li>
+      <li><div>Changer de réponse selon l'ordre de saisie<span>Même journée, même résultat.</span></div></li>
+      <li><div>Accepter une boucle dans le flux<span>Un poste ne peut pas attendre un poste qui l'attend.</span></div></li>
+      <li><div>Se contenter d'un plan fragile<span>Chaque plan est rejoué avec des cadences à −15 % et +15 %.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= ACCÈS ================= -->
+<section class="sec ruled" id="acces" aria-labelledby="h-ac">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="eyebrow" style="--c:var(--accent)"><i></i>Accès</span><h2 class="h2" id="h-ac">Monte à bord</h2></div>
+      <p class="lede">Crewline tient dans une seule page. Pas de serveur, pas de compte : tes sites, tes équipes et tes journées restent enregistrés dans ton navigateur.</p>
+    </div>
+    <div class="open">
+      <div class="go">
+        <svg class="deco" viewBox="0 0 300 140" aria-hidden="true"><path d="M0 20H300" stroke="#16181B" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M0 70H90C130 70 130 120 170 120H300" stroke="#16181B" stroke-width="12" stroke-linecap="round" fill="none"/></svg>
+        <h3>Ouvre Crewline</h3>
+        <ul><li>Sept exemples prêts, de la journée normale au Black Friday</li><li>Ou une journée vierge qui te dit par quoi commencer</li><li>Gratuit, sans compte, en clair ou en sombre</li></ul>
+        <div class="row"><a class="btn js-app" href="crewline-autonome.html">Ouvrir Crewline</a><small id="app-url"></small></div>
+      </div>
+      <div class="side">
+        <div class="box"><h3>Hors ligne</h3><p>Un seul fichier HTML. Télécharge-le, ouvre-le dans ton navigateur : seules la dictée et la lecture de photo ont besoin du réseau.</p><a class="btn js-dl" href="crewline-autonome.html" download="Crewline.html" style="justify-self:start">Télécharger Crewline</a></div>
+        <div class="box"><h3>Sur ton téléphone</h3>
+          <div class="qr"><div id="qr" role="img" aria-label="QR code vers Crewline"></div><p>Scanne pour l'ouvrir, puis ajoute-le à ton écran d'accueil.</p></div>
+          <div class="os" role="tablist" aria-label="Ton téléphone"><button role="tab" aria-selected="true" data-os="ios">iPhone</button><button role="tab" aria-selected="false" data-os="and">Android</button></div>
+          <ol class="howto" data-os="ios"><li>Ouvre le lien dans <b>Safari</b></li><li>Touche <b>Partager</b></li><li>Choisis <b>Sur l'écran d'accueil</b></li></ol>
+          <ol class="howto" data-os="and" hidden><li>Ouvre le lien dans <b>Chrome</b></li><li>Touche le menu <b>⋮</b></li><li>Choisis <b>Ajouter à l'écran d'accueil</b></li></ol>
+        </div>
+      </div>
+    </div>
+    <div class="phones">
+      <div><h3>Pensé aussi pour l'allée</h3><p>Sur téléphone, le diagnostic et les plans passent en une colonne : la phrase qui dit où ça coince, puis les plans à comparer d'un pouce.</p></div>
+      <div class="pp"><img src="assets/shots/m-diagnostic.webp" width="780" height="1560" alt="Le diagnostic sur téléphone." loading="lazy"><img src="assets/shots/m-plans.webp" width="780" height="1560" alt="Les plans sur téléphone." loading="lazy"></div>
+    </div>
+    <div class="contact" id="contact">
+      <div class="box"><div><h3>Rejouer une de tes journées</h3><p>On décrit ensemble ton entrepôt et ton équipe, puis on rejoue une vraie journée difficile pour voir ce que Crewline aurait proposé.</p></div><a class="btn" href="mailto:ghaythmejai1@gmail.com?subject=Crewline%20%3A%20rejouer%20une%20journ%C3%A9e">Proposer une journée</a></div>
+      <div class="box"><div><h3>Une question ?</h3><p>Retour du terrain, idée de poste à ajouter, recrutement : je réponds sous 48 h.</p><div class="mail"><span id="mail">ghaythmejai1@gmail.com</span><button class="btn small" type="button" id="copy">Copier</button></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= QUESTIONS ================= -->
+<section class="sec ruled" id="questions" aria-labelledby="h-q">
+  <div class="wrap fq">
+    <div>
+      <h2 class="h2" id="h-q">Questions</h2>
+      <div class="limits"><h3>Ce qu'il ne fait pas encore</h3><ul>
+        <li>Une commande suit son parcours d'un bloc : pas de colis multiples ni de commandes partiellement préparées.</li>
+        <li>La recherche trouve de bons plans, sans garantir le meilleur possible.</li>
+        <li>Les enregistrements restent dans le navigateur : utilise « Exporter » pour garder une copie.</li>
+      </ul></div>
+    </div>
+    <div>
+      <details><summary>Ça remplace mon WMS ou mon planning RH ?</summary><p>Non. Crewline ne pilote rien : il simule ta journée et propose des déplacements de personnes. C'est toi qui décides, et tu peux partir d'un plan pour le modifier à la main.</p></details>
+      <details><summary>Jusqu'à quelle taille d'entrepôt ?</summary><p>30 postes, 150 personnes, 15 000 commandes et 12 heures par journée. Au-delà de 8 postes, les écrans passent en mode compact.</p></details>
+      <details><summary>Mes cadences ne sont pas exactes. Ça marche quand même ?</summary><p>Oui. Chaque cadence est marquée « estimée » ou « mesurée », et chaque plan est rejoué à −15 % et +15 % pour vérifier qu'il reste utile.</p></details>
+      <details><summary>Il tient compte de l'intérim ?</summary><p>Oui. Chaque personne a un contrat. Les intérimaires sont repérés partout en violet, et ceux en fin de mission sont proposés au retrait quand tu passes à la journée suivante.</p></details>
+      <details><summary>Je peux suivre plusieurs sites ?</summary><p>Oui. « Enregistrer comme site » garde l'entrepôt, l'équipe, les vagues et les réglages. Les prévisions n'utilisent que l'historique du site ouvert.</p></details>
+      <details><summary>Mes données partent sur un serveur ?</summary><p>Non, tout reste dans ton navigateur. Seule la saisie par IA, si tu l'utilises avec une clé, envoie le texte, l'audio ou la photo au service d'IA choisi.</p></details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <h2>Le prochain imprévu, tu le vois venir.</h2>
+      <div class="btns"><a class="btn primary js-app" href="crewline-autonome.html">Ouvrir Crewline</a><a class="btn on-g" href="#contact">Me contacter</a></div>
+    </div>
+    <div class="lanes" aria-hidden="true">
+      <svg viewBox="0 0 1200 150" preserveAspectRatio="none" id="lanes"><path d="M7 20H1193" stroke="var(--s1)"/><path id="laneMove" d="M7 75H420C470 75 490 130 540 130H1193" stroke="#F5C400"/><path d="M7 130H330" stroke="var(--s5)" opacity=".45"/></svg>
+    </div>
+    <div class="wordmark" aria-hidden="true">Crewline</div>
+    <div class="foot-bottom">
+      <span>Crewline, l'aide à la décision pour réaffecter une équipe d'entrepôt. Conçu par <a href="/" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Gayth Mejai</a>.</span>
+      <nav><a class="js-app" href="crewline-autonome.html">L'app</a><a href="#contact">Contact</a><a href="#questions">Questions</a></nav>
+    </div>
+  </div>
+</footer>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<script>
+/* À modifier une fois en ligne : l'adresse de l'app (relative ou absolue) */
+window.CL_LINKS={app:"crewline-autonome.html"};
+</script>
+<script>
+/* Plan de métro de la journée : une ligne par personne, une couleur par poste.
+   Données : sortie réelle du moteur Crewline (exemple Hub), grille minute par minute.
+   Les changements de voie sont dessinés à 45°, comme sur un plan de métro. */
+const METRO=(function(){
+const OFF=-1, TRANS=-2, BRK=-3, ABS=-4;
+function expand(rle,H){ const a=new Int16Array(H).fill(OFF); for(const [s,e,v] of rle) for(let i=s;i<e&&i<H;i++) a[i]=v; return a; }
+function prepare(D){
+  const H=D.horizon, W=D.workers.map(w=>({...w,gb:expand(w.b,H),gp:expand(w.p,H)}));
+  const S=D.stages.length, homes=Array.from({length:S},()=>[]), vis=Array.from({length:S},()=>[]);
+  W.forEach((w,i)=>homes[w.h].push(i));
+  W.forEach((w,i)=>{ const seen=new Set(); for(const g of [w.gb,w.gp]) for(let m=0;m<H;m++){ const v=g[m]; if(v>=0&&v!==w.h&&!seen.has(v)){ seen.add(v); vis[v].push(i); } } });
+  const slot=new Map(); let row=0; const bands=[];
+  for(let s=0;s<S;s++){ const top=row; homes[s].forEach(i=>slot.set(i+'@'+s,row++)); vis[s].forEach(i=>slot.set(i+'@'+s,row++)); bands.push({s,top,bottom:row-1}); row+=1.15; }
+  const P={H,W,S,bands,rows:row-1.15,slot};
+  W.forEach((w,i)=>{ w.rb=runs(P,i,w.gb); w.rp=runs(P,i,w.gp); let d=-1; for(let m=0;m<H;m++) if(w.gb[m]!==w.gp[m]){ d=m; break; } w.div=d; });
+  return P;
+}
+/* une grille -> suite de tronçons {a,b,row,k} ; k = 'sN' poste, 'b' pause, 'a' absence */
+function runs(P,i,g){
+  const w=P.W[i], out=[]; let last=w.h;
+  for(let m=0;m<P.H;){
+    const v=g[m]; let e=m; while(e<P.H&&g[e]===v) e++;
+    if(v===OFF||v===TRANS){ m=e; continue; }
+    const st=v>=0?v:last; if(v>=0) last=v;
+    const k=v>=0?'s'+v:v===BRK?'b':'a';
+    const row=P.slot.get(i+'@'+st);
+    const prev=out[out.length-1];
+    if(prev&&prev.k===k&&prev.row===row&&prev.b===m) prev.b=e; else out.push({a:m,b:e,row,k,trans:g[m-1]===TRANS});
+    m=e;
+  }
+  return out;
+}
+/* chemin en pixels : horizontales, puis virage à 45° vers la voie suivante */
+function path(r,X,Y){
+  const segs=r.map(s=>({type:'h',k:s.k,x1:X(s.a),x2:X(s.b),y:Y(s.row)}));
+  const out=[];
+  for(let j=0;j<r.length;j++){
+    const h=segs[j]; out.push(h);
+    const n=r[j+1];
+    if(n&&n.row!==r[j].row){
+      const y2=Y(n.row), dx=Math.max(X(n.a)-X(r[j].b),Math.abs(y2-h.y)*.58), xm=(X(r[j].b)+X(n.a))/2, d={type:'d',k:'t',x1:xm-dx/2,y1:h.y,x2:xm+dx/2,y2};
+      h.x2=Math.min(h.x2,d.x1); segs[j+1].x1=Math.max(segs[j+1].x1,d.x2); out.push(d);
+    }
+  }
+  return out;
+}
+function strokeSeg(ctx,sg,o,alpha){
+  const C=o.colors;
+  if(alpha<=0.001) return;
+  const col=sg.k[0]==='s'?C.st[(+sg.k.slice(1))%8]:sg.k==='t'?C.accent:sg.k==='b'?C.hatch:C.muted;
+  ctx.globalAlpha=alpha*(sg.k==='a'?.85:1);
+  ctx.strokeStyle=col; ctx.lineWidth=sg.k==='b'?o.lw*.4:sg.k==='a'?Math.max(1,o.lw*.38):o.lw;
+  ctx.setLineDash(sg.k==='a'?[0.1,o.lw*1.25]:[]);
+  ctx.beginPath();
+  if(sg.type==='h'){ if(sg.x2<=sg.x1) return; ctx.moveTo(sg.x1,sg.y); ctx.lineTo(sg.x2,sg.y); }
+  else{ ctx.moveTo(sg.x1,sg.y1); ctx.lineTo(sg.x2,sg.y2); }
+  ctx.stroke();
+}
+function clipTo(ctx,x,o){ ctx.save(); ctx.beginPath(); ctx.rect(-20,-20,x+20,o.h+40); ctx.clip(); }
+/* o : {ctx,w,h,x0,t0,t1,y0,gap,lw,colors,k (0 = prévu, 1 = plan),reveal (minute),focus:Set,dim,heads,ghost} */
+function draw(P,o){
+  const {ctx}=o, pxm=(o.w-o.x0)/(o.t1-o.t0), X=m=>o.x0+(m-o.t0)*pxm, Y=r=>o.y0+r*o.gap;
+  const rev=o.reveal==null?P.H:o.reveal, clip=X(rev);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  P.W.forEach((w,i)=>{
+    if(!w._pb||w._pxm!==pxm||w._x0!==X(0)||w._gap!==o.gap||w._y0!==o.y0){ w._pb=path(w.rb,X,Y); w._pp=path(w.rp,X,Y); w._pxm=pxm; w._x0=X(0); w._gap=o.gap; w._y0=o.y0; }
+    const foc=o.focus&&o.focus.has(i), a0=o.focus&&!foc?1-(o.dim||0):1; const lw0=o.lw; if(foc&&o.focusLw) o.lw=lw0*(1+(o.focusLw-1)*Math.min(1,o.k||0));
+    if(w.div<0||o.k<=0){ clipTo(ctx,clip,o); for(const sg of w._pb) strokeSeg(ctx,sg,o,a0); ctx.restore(); }
+    else if(o.k>=1&&!o.ghost){ clipTo(ctx,clip,o); for(const sg of w._pp) strokeSeg(ctx,sg,o,a0); ctx.restore(); }
+    else{
+      const xd=X(w.div);
+      /* partie commune */
+      clipTo(ctx,Math.min(clip,xd-2),o); for(const sg of w._pb) strokeSeg(ctx,sg,o,a0); ctx.restore();
+      /* ancienne voie : s'efface, puis reste en pointillé */
+      ctx.save(); ctx.beginPath(); ctx.rect(xd-2,-20,Math.max(0,clip-xd+2),o.h+40); ctx.clip();
+      for(const sg of w._pb) strokeSeg(ctx,sg,o,a0*(1-o.k)*.9);
+      if(o.ghost&&o.k>0) for(const sg of w._pb){ if(sg.type!=='h') continue; ctx.globalAlpha=.6*o.k*a0; ctx.strokeStyle=o.colors.ink; ctx.lineWidth=Math.max(1,o.lw*.28); ctx.setLineDash([2,o.lw*1.3]); ctx.beginPath(); ctx.moveTo(sg.x1,sg.y); ctx.lineTo(sg.x2,sg.y); ctx.stroke(); }
+      ctx.restore();
+      /* nouvelle voie : se trace depuis le changement */
+      const cx=Math.min(clip,xd+(X(P.H)-xd)*Math.min(1,o.k*1.15));
+      ctx.save(); ctx.beginPath(); ctx.rect(xd-o.gap*4,-20,Math.max(0,cx-xd+o.gap*4),o.h+40); ctx.clip();
+      for(const sg of w._pp) if(sg.type==='d'||sg.x2>xd-o.gap*4) strokeSeg(ctx,sg,o,a0);
+      ctx.restore();
+    }
+    if(o.heads&&rev<P.H){ const m=Math.max(0,Math.min(P.H-1,Math.floor(rev))); const r=(o.k>=.5?w.rp:w.rb).find(s=>s.a<=m&&s.b>m);
+      if(r&&r.k!=='a'){ ctx.setLineDash([]); ctx.globalAlpha=a0; ctx.fillStyle=o.colors.paper; ctx.strokeStyle=r.k[0]==='s'?o.colors.st[(+r.k.slice(1))%8]:o.colors.hatch; ctx.lineWidth=Math.max(1.5,o.lw*.45); ctx.beginPath(); ctx.arc(clip,Y(r.row),o.lw*.85,0,7); ctx.fill(); ctx.stroke(); } }
+    o.lw=lw0;
+  });
+  ctx.globalAlpha=1; ctx.setLineDash([]);
+}
+function hit(P,o,px,py){
+  const pxm=(o.w-o.x0)/(o.t1-o.t0), m=Math.round(o.t0+(px-o.x0)/pxm); if(m<0||m>=P.H) return null;
+  let best=null,bd=1e9;
+  P.W.forEach((w,i)=>{ const r=(o.k>=.5?w.rp:w.rb).find(s=>s.a<=m&&s.b>m); if(!r) return; const d=Math.abs(o.y0+r.row*o.gap-py); if(d<bd){ bd=d; best={i,m,k:r.k}; } });
+  return bd<=Math.max(5,o.gap*.6)?best:null;
+}
+return {prepare,draw,hit,OFF,TRANS,BRK,ABS};
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STILL=/[?&]still/.test(location.search);
+const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+const eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, eo=t=>1-Math.pow(1-t,3);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fr=n=>Math.round(n).toLocaleString('fr-FR').replace(/ | /g,' ');
+
+/* ---------- liens ---------- */
+const appHref=window.CL_LINKS.app, appAbs=new URL(appHref,location.href).href;
+$$('.js-app,.js-dl').forEach(a=>a.href=appHref);
+$('#app-url').textContent=appAbs.replace(/^https?:\/\//,'');
+
+/* ---------- données réelles (moteur Crewline 3.5) ---------- */
+const DATA={"hub":{"start":6,"horizon":480,"stages":["Réception quai","Contrôle qualité","Tri des retours","Rangement","Réapprovisionnement","Picking mono (lots)","Put-wall","Picking zone A","Picking froid","Picking volumineux","Consolidation","Emballage mono","Emballage multi","Services (cadeau, kit)","Tri & étiquetage","Chargement transporteurs"],"workers":[{"n":"Inès","h":0,"it":0,"b":[[0,150,0],[150,170,-3],[170,480,0]],"p":[[0,150,0],[150,170,-3],[170,480,0]]},{"n":"Sarah","h":0,"it":0,"b":[[0,165,0],[165,185,-3],[185,480,0]],"p":[[0,165,0],[165,185,-3],[185,480,0]]},{"n":"Hugo","h":0,"it":1,"b":[[0,180,0],[180,200,-3],[200,480,0]],"p":[[0,180,0],[180,200,-3],[200,480,0]]},{"n":"Yassine","h":1,"it":0,"b":[[0,195,1],[195,215,-3],[215,480,1]],"p":[[0,195,1],[195,215,-3],[215,480,1]]},{"n":"Léa","h":1,"it":1,"b":[[0,210,1],[210,230,-3],[230,480,1]],"p":[[0,210,1],[210,230,-3],[230,480,1]]},{"n":"Mehdi","h":1,"it":1,"b":[[0,225,1],[225,245,-3],[245,480,1]],"p":[[0,225,1],[225,245,-3],[245,480,1]]},{"n":"Karim","h":2,"it":1,"b":[[0,240,2],[240,260,-3],[260,480,2]],"p":[[0,240,2],[240,260,-3],[260,480,2]]},{"n":"Lina","h":2,"it":0,"b":[[0,255,2],[255,275,-3],[275,480,2]],"p":[[0,255,2],[255,275,-3],[275,480,2]]},{"n":"Amine","h":3,"it":0,"b":[[0,150,3],[150,170,-3],[170,480,3]],"p":[[0,150,3],[150,170,-3],[170,480,3]]},{"n":"Sofia","h":3,"it":0,"b":[[0,165,3],[165,185,-3],[185,480,3]],"p":[[0,165,3],[165,185,-3],[185,480,3]]},{"n":"Nabil","h":3,"it":1,"b":[[0,180,3],[180,200,-3],[200,480,3]],"p":[[0,180,3],[180,200,-3],[200,480,3]]},{"n":"Rania","h":3,"it":1,"b":[[0,195,3],[195,215,-3],[215,480,3]],"p":[[0,195,3],[195,215,-3],[215,480,3]]},{"n":"Malik","h":4,"it":0,"b":[[0,210,4],[210,230,-3],[230,480,4]],"p":[[0,210,4],[210,230,-3],[230,480,4]]},{"n":"Chloé","h":4,"it":1,"b":[[0,225,4],[225,245,-3],[245,480,4]],"p":[[0,225,4],[225,245,-3],[245,480,4]]},{"n":"Adam","h":4,"it":0,"b":[[0,240,4],[240,260,-3],[260,480,4]],"p":[[0,240,4],[240,260,-3],[260,480,4]]},{"n":"Jade","h":5,"it":0,"b":[[0,255,5],[255,275,-3],[275,480,5]],"p":[[0,255,5],[255,275,-3],[275,480,5]]},{"n":"Lucas","h":5,"it":1,"b":[[0,480,-4]],"p":[[0,480,-4]]},{"n":"Nour","h":5,"it":1,"b":[[0,480,-4]],"p":[[0,480,-4]]},{"n":"Théo","h":5,"it":1,"b":[[0,180,5],[180,200,-3],[200,480,5]],"p":[[0,180,5],[180,200,-3],[200,480,5]]},{"n":"Maya","h":5,"it":0,"b":[[0,195,5],[195,215,-3],[215,480,5]],"p":[[0,195,5],[195,215,-3],[215,480,5]]},{"n":"Rayan","h":5,"it":0,"b":[[0,210,5],[210,230,-3],[230,480,5]],"p":[[0,210,5],[210,230,-3],[230,480,5]]},{"n":"Emma","h":6,"it":1,"b":[[0,225,6],[225,245,-3],[245,480,6]],"p":[[0,225,6],[225,245,-3],[245,480,6]]},{"n":"Ilyes","h":6,"it":0,"b":[[0,240,6],[240,260,-3],[260,480,6]],"p":[[0,240,6],[240,260,-3],[260,480,6]]},{"n":"Zoé","h":6,"it":0,"b":[[0,255,6],[255,275,-3],[275,480,6]],"p":[[0,255,6],[255,275,-3],[275,480,6]]},{"n":"Bilal","h":7,"it":0,"b":[[0,150,7],[150,170,-3],[170,480,7]],"p":[[0,150,7],[150,170,-3],[170,480,7]]},{"n":"Manon","h":7,"it":0,"b":[[0,165,7],[165,185,-3],[185,480,7]],"p":[[0,165,7],[165,185,-3],[185,240,5],[240,245,-2],[245,480,7]]},{"n":"Samir","h":7,"it":0,"b":[[0,180,7],[180,200,-3],[200,480,7]],"p":[[0,180,7],[180,200,-3],[200,480,7]]},{"n":"Clara","h":7,"it":0,"b":[[0,195,7],[195,215,-3],[215,480,7]],"p":[[0,195,7],[195,215,-3],[215,480,7]]},{"n":"Walid","h":7,"it":0,"b":[[0,210,7],[210,230,-3],[230,480,7]],"p":[[0,210,7],[210,230,-3],[230,480,7]]},{"n":"Louise","h":7,"it":0,"b":[[0,225,7],[225,245,-3],[245,480,7]],"p":[[0,105,7],[105,110,-2],[110,225,12],[225,245,-3],[245,480,12]]},{"n":"Anis","h":7,"it":0,"b":[[0,240,7],[240,260,-3],[260,480,7]],"p":[[0,240,7],[240,260,-3],[260,480,7]]},{"n":"Camille","h":8,"it":1,"b":[[0,255,8],[255,275,-3],[275,480,8]],"p":[[0,255,8],[255,275,-3],[275,480,8]]},{"n":"Yanis","h":8,"it":0,"b":[[0,150,8],[150,170,-3],[170,480,8]],"p":[[0,150,8],[150,170,-3],[170,480,8]]},{"n":"Lou","h":8,"it":1,"b":[[0,165,8],[165,185,-3],[185,480,8]],"p":[[0,165,8],[165,185,-3],[185,480,8]]},{"n":"Hamza","h":9,"it":1,"b":[[0,180,9],[180,200,-3],[200,480,9]],"p":[[0,180,9],[180,200,-3],[200,480,9]]},{"n":"Alice","h":9,"it":0,"b":[[0,195,9],[195,215,-3],[215,480,9]],"p":[[0,195,9],[195,215,-3],[215,480,9]]},{"n":"Sami","h":10,"it":1,"b":[[0,210,10],[210,230,-3],[230,480,10]],"p":[[0,210,10],[210,230,-3],[230,480,10]]},{"n":"Julie","h":10,"it":0,"b":[[0,225,10],[225,245,-3],[245,480,10]],"p":[[0,225,10],[225,245,-3],[245,480,10]]},{"n":"Omar","h":10,"it":1,"b":[[0,240,10],[240,260,-3],[260,480,10]],"p":[[0,240,10],[240,260,-3],[260,480,10]]},{"n":"Elsa","h":11,"it":0,"b":[[0,255,11],[255,275,-3],[275,480,11]],"p":[[0,255,11],[255,275,-3],[275,480,11]]},{"n":"Nassim","h":11,"it":0,"b":[[0,150,11],[150,170,-3],[170,480,11]],"p":[[0,150,11],[150,170,-3],[170,480,11]]},{"n":"Inaya","h":11,"it":0,"b":[[0,165,11],[165,185,-3],[185,480,11]],"p":[[0,165,11],[165,185,-3],[185,480,11]]},{"n":"Victor","h":11,"it":0,"b":[[0,180,11],[180,200,-3],[200,480,11]],"p":[[0,180,11],[180,200,-3],[200,480,11]]},{"n":"Salomé","h":12,"it":0,"b":[[0,195,12],[195,215,-3],[215,480,12]],"p":[[0,195,12],[195,215,-3],[215,480,12]]},{"n":"Idris","h":12,"it":1,"b":[[0,210,12],[210,230,-3],[230,480,12]],"p":[[0,210,12],[210,230,-3],[230,480,12]]},{"n":"Margaux","h":12,"it":0,"b":[[0,225,12],[225,245,-3],[245,480,12]],"p":[[0,225,12],[225,245,-3],[245,480,12]]},{"n":"Ryan","h":12,"it":1,"b":[[0,240,12],[240,260,-3],[260,480,12]],"p":[[0,240,12],[240,260,-3],[260,480,12]]},{"n":"Assia","h":12,"it":0,"b":[[0,255,12],[255,275,-3],[275,480,12]],"p":[[0,255,12],[255,275,-3],[275,480,12]]},{"n":"Hugo B.","h":13,"it":1,"b":[[0,150,13],[150,170,-3],[170,480,13]],"p":[[0,150,13],[150,170,-3],[170,480,13]]},{"n":"Leïla","h":13,"it":0,"b":[[0,165,13],[165,185,-3],[185,480,13]],"p":[[0,165,13],[165,185,-3],[185,480,13]]},{"n":"Tom","h":14,"it":0,"b":[[0,180,14],[180,200,-3],[200,480,14]],"p":[[0,180,14],[180,200,-3],[200,480,14]]},{"n":"Personne 52","h":14,"it":0,"b":[[0,195,14],[195,215,-3],[215,480,14]],"p":[[0,195,14],[195,215,-3],[215,480,14]]},{"n":"Personne 53","h":15,"it":0,"b":[[0,210,15],[210,230,-3],[230,480,15]],"p":[[0,210,15],[210,230,-3],[230,480,15]]},{"n":"Personne 54","h":15,"it":1,"b":[[0,225,15],[225,245,-3],[245,480,15]],"p":[[0,225,15],[225,245,-3],[245,480,15]]},{"n":"Personne 55","h":15,"it":0,"b":[[0,240,15],[240,260,-3],[260,480,15]],"p":[[0,240,15],[240,260,-3],[260,480,15]]}],"moves":[{"n":"Louise","to":12,"at":105,"until":480},{"n":"Manon","to":5,"at":180,"until":240}],"lateBase":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,169,169,169,169,169,169,169],"latePlan":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"qBase":[17,46,59,83,99,111,174,197,240,250,279,310,347,388,419,471,488,537,514,507,497,492,479,458,457,461,463,490,505,512,529,548,573,602,614,629,677,722,780,861,906,950,950,917,897,893,877,858,904,940,973,1031,1066,1039,998,978,947,931,919,916,934,921,919,918,919,921,894,872,841,803,769,729,699,662,633,592,555,521,486,450,420,386,349,316,279,243,206,171,138,112,99,85,72,58,45,31],"qPlan":[17,46,59,83,99,111,174,197,240,250,279,310,347,388,419,471,488,537,514,507,497,492,476,455,452,452,453,471,483,493,508,526,547,577,584,594,644,680,734,825,867,904,900,845,842,845,798,765,820,856,881,935,964,943,900,872,823,806,802,809,834,817,807,801,795,788,759,723,690,652,616,573,541,504,465,427,394,354,318,276,237,196,159,123,87,51,14,0,0,0,0,0,0,0,0,0]},"mega":{"start":5,"horizon":720,"lateBase":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,395,395,395,395,395,395,419,419,419,419,419,419,419,419,419,419,419,419,1248,1248,1248,1248,1248,1248,1248],"latePlan":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,28,28,28,28,28,28,28,28,28,28,28,28,330,330,330,330,330,330,330]}};
+const HUB=DATA.hub, MEGA=DATA.mega, P=METRO.prepare(HUB);
+const clock=(m,start=HUB.start)=>{const t=start*60+Math.round(m);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(((t%60)+60)%60).padStart(2,'0')};
+const FOCUS=new Set(HUB.moves.map(m=>HUB.workers.findIndex(w=>w.n===m.n)));
+let COL={};
+function readColors(){ const cs=getComputedStyle(document.documentElement), v=n=>cs.getPropertyValue(n).trim();
+  COL={st:[1,2,3,4,5,6,7,8].map(i=>v('--s'+i)),accent:v('--accent'),hatch:v('--hatch'),muted:v('--muted'),ink:v('--ink'),paper:v('--bg'),bad:v('--bad'),line:v('--line')}; }
+readColors(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ readColors(); heroDraw(); dirty=true; });
+
+function fit(c){ const r=c.getBoundingClientRect(), d=Math.min(2,devicePixelRatio||1); const w=Math.round(r.width*d), h=Math.round(r.height*d); if(c.width!==w||c.height!==h){ c.width=w; c.height=h; } const x=c.getContext('2d'); x.setTransform(d,0,0,d,0,0); return {ctx:x,w:r.width,h:r.height}; }
+
+/* ================= OUVERTURE ================= */
+const hc=$('#heroCanvas'), hmap=$('#heroMap'), hl=$('#heroLabels'), htags=$('#heroTags'), hscore=$('#heroScore');
+const H={reveal:0,k:0,t0:0};
+function heroGeom(){ const r=hmap.getBoundingClientRect(), mob=r.width<900; const x0=mob?16:Math.max(190,(r.width-1360)/2+190), pad=10, gap=(r.height-pad*2)/P.rows; return {w:r.width-(mob?16:Math.max(24,(r.width-1360)/2+24)),h:r.height,x0,y0:pad,gap,lw:clamp(gap*.62,1.6,6)}; }
+function heroDraw(){ const {ctx,w,h}=fit(hc); ctx.clearRect(0,0,w,h); const g=heroGeom();
+  METRO.draw(P,{ctx,w:g.w,h,x0:g.x0,t0:0,t1:P.H,y0:g.y0,gap:g.gap,lw:g.lw,colors:COL,k:H.k,reveal:H.reveal,heads:H.reveal<P.H,focus:H.k>0?FOCUS:null,dim:.72*H.k,focusLw:1.5,ghost:true}); }
+function heroLayout(){ const g=heroGeom();
+  hl.innerHTML=P.bands.map(b=>`<span style="top:${g.y0+((b.top+b.bottom)/2)*g.gap}px;--c:var(--s${(b.s%8)+1})"><i></i>${esc(HUB.stages[b.s])}</span>`).join('');
+  const X=m=>g.x0+m*(g.w-g.x0)/P.H;
+  $('#heroAxis').innerHTML=(innerWidth<700?[0,120,240,360,480]:[0,60,120,180,240,300,360,420,480]).map(m=>`<span style="left:${X(m)-parseFloat(getComputedStyle($('#heroAxis')).marginLeft)}px">${clock(m)}</span>`).join('');
+  htags.innerHTML=HUB.moves.map((mv,j)=>{ const i=HUB.workers.findIndex(w=>w.n===mv.n), w=P.W[i]; const r=w.rp.find(s=>s.a>=mv.at)||w.rp[0]; const t=mv.until?(mv.at+mv.until)/2:mv.at+60;
+    return `<div class="tag" data-j="${j}" style="left:${X(t)}px;top:${g.y0+r.row*g.gap}px"><b>${clock(mv.at)}</b>${esc(mv.n)} → ${esc(HUB.stages[mv.to])}</div>`; }).join('');
+}
+heroLayout(); heroDraw();
+addEventListener('resize',()=>{ heroLayout(); heroDraw(); });
+/* survol : qui est sur cette ligne, à cette heure */
+const tip=$('#tip');
+hc.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse') return; const r=hc.getBoundingClientRect(), g=heroGeom();
+  const h=METRO.hit(P,{w:g.w,x0:g.x0,t0:0,t1:P.H,y0:g.y0,gap:g.gap,k:H.k},e.clientX-r.left,e.clientY-r.top);
+  if(!h){ tip.style.opacity=0; return; } const w=HUB.workers[h.i];
+  const where=h.k[0]==='s'?HUB.stages[+h.k.slice(1)]:h.k==='b'?'en pause':'absent';
+  tip.className='tip'+(w.it?' it':''); tip.innerHTML=`<b>${esc(w.n)}${w.it?' · intérim':''}</b><span class="mono">${clock(h.m)}</span> · ${esc(where)}${h.k[0]==='s'&&+h.k.slice(1)!==w.h?' · renfort':''}`;
+  tip.style.opacity=1; tip.style.left=Math.min(e.clientX+14,innerWidth-240)+'px'; tip.style.top=(e.clientY+16)+'px'; });
+hc.addEventListener('pointerleave',()=>tip.style.opacity=0);
+
+function heroIntro(){
+  if(RM||STILL){ H.reveal=P.H; H.k=1; heroDraw(); $$('.tag').forEach(t=>t.classList.add('on')); hscore.classList.add('on'); return; }
+  const t0=performance.now(), D1=2600, D2=1500, P2=D1+500;
+  (function f(now){ const t=now-t0; H.reveal=P.H*eio(clamp(t/D1)); H.k=eio(clamp((t-P2)/D2)); heroDraw();
+    if(t>P2+D2*.6) $$('.tag').forEach((x,j)=>setTimeout(()=>x.classList.add('on'),j*260));
+    if(t>P2+D2) hscore.classList.add('on');
+    if(t<P2+D2+50) requestAnimationFrame(f); })(t0);
+}
+
+/* intro : le logo se dessine, puis la page */
+const intro=$('#intro');
+function start(){ document.documentElement.classList.add('ready'); setTimeout(heroIntro,350); }
+if(RM||STILL){ intro.classList.add('out'); start(); }
+else{
+  const paths=$$('#intro path'); paths.forEach((p,i)=>{ const L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; p.style.transition=`stroke-dashoffset .9s cubic-bezier(.6,0,.2,1) ${i*.16}s`; });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>paths.forEach(p=>p.style.strokeDashoffset=0)));
+  setTimeout(()=>{ intro.classList.add('out'); start(); },1500);
+}
+
+/* ================= LA JOURNÉE AU DÉFILEMENT ================= */
+const day=$('#journee'), dc=$('#dayCanvas'), dmap=$('#dayMap'), stopsEl=$('#dayStops'), ph=$('#playhead');
+const EVENTS=[
+  {m:0,kind:'ev',label:'2 absents',cap:'Lucas et Nour, intérimaires au picking mono, ne viennent pas.'},
+  {m:35,kind:'ev',label:'',cap:'Le diagnostic l\'avait vu : l\'emballage multi va manquer de monde jusqu\'à 13:20.'},
+  {m:105,kind:'move',label:'Louise',cap:'Louise quitte le picking zone A pour l\'emballage multi, jusqu\'à la fin du service.'},
+  {m:180,kind:'ev',label:'Pic multi',cap:'Pic de commandes multi. Manon part une heure au picking mono, qui a perdu deux personnes.'},
+  {m:240,kind:'ev',label:'Panne tri',cap:'Le tri et étiquetage tombe en panne. Les files montent, le plan tient.'},
+  {m:300,kind:'ev',label:'',cap:'Avec le plan, les files fondent plus vite : l\'écart se creuse jusqu\'à la dernière heure limite.'},
+  {m:450,kind:'ev',label:'13:30 · Départ',cap:'13:30, derniers transporteurs : 169 commandes manquent le départ sans rien changer. Aucune avec le plan.'}
+];
+stopsEl.innerHTML=EVENTS.filter(e=>e.label).map(e=>`<div class="stop${e.kind==='move'?' move':''}" data-m="${e.m}"><span>${clock(e.m)} · ${esc(e.label)}</span></div>`).join('')
+  +`<div class="stop move" data-m="240"><span>10:00 · Manon revient</span></div>`;
+const stopEls=$$('#dayStops .stop');
+let dayT=0, dayTarget=0, dirty=true, capIdx=-1;
+function dayGeom(){ const r=dmap.getBoundingClientRect(), mob=r.width<900, win=mob?150:250, lead=mob?.62:.7; return {w:r.width,h:r.height,win,lead,y0:6,gap:(r.height-12)/P.rows}; }
+function dayDraw(){
+  const {ctx,w,h}=fit(dc); ctx.clearRect(0,0,w,h);
+  const g=dayGeom(), t=dayT, t0=clamp(t-g.win*g.lead,0,P.H-g.win), t1=t0+g.win, X=m=>(m-t0)/(t1-t0)*w;
+  /* quadrillage horaire */
+  ctx.strokeStyle=COL.line; ctx.lineWidth=1; ctx.fillStyle=COL.muted; ctx.font='500 11.5px "IBM Plex Mono",monospace';
+  for(let m=Math.ceil(t0/30)*30;m<=t1;m+=30){ const x=X(m); ctx.globalAlpha=m%60?.5:1; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); if(m%60===0){ ctx.globalAlpha=1; ctx.fillText(clock(m),x+5,h-6); } }
+  ctx.globalAlpha=1;
+  METRO.draw(P,{ctx,w,h,x0:0,t0,t1,y0:g.y0,gap:g.gap,lw:clamp(g.gap*.66,1.8,7),colors:COL,k:1,reveal:t,heads:true,focus:FOCUS,dim:t>=95?.45:0,ghost:true});
+  ph.style.left=X(t)+'px';
+  stopEls.forEach(s=>{ const x=X(+s.dataset.m); s.style.left=x+'px'; s.style.opacity=x<-200||x>w?0:1; });
+}
+const lb=$('#lateBase'), lp=$('#latePlan'), clk=$('#clock'), capT=$('#capText'), capTime=$('#capTime');
+function dayHud(){
+  const t=dayT, k=Math.min(HUB.lateBase.length-1,Math.floor(t/5));
+  clk.textContent=clock(t); lb.textContent=fr(HUB.lateBase[k]); lp.textContent=fr(HUB.latePlan[k]); $('#qBase').textContent=fr(HUB.qBase[Math.min(HUB.qBase.length-1,k)]); $('#qPlan').textContent=fr(HUB.qPlan[Math.min(HUB.qPlan.length-1,k)]);
+  let i=0; EVENTS.forEach((e,j)=>{ if(t>=e.m-1) i=j; });
+  if(i!==capIdx){ capIdx=i; capT.classList.add('out'); setTimeout(()=>{ capT.textContent=EVENTS[i].cap; capTime.textContent=clock(EVENTS[i].m); capT.classList.remove('out'); },RM?0:180); }
+  const mw=$('#miniWin'), g=dayGeom(); mw.style.left=(clamp(t-g.win*g.lead,0,P.H-g.win)/P.H*100)+'%'; mw.style.width=(g.win/P.H*100)+'%';
+}
+function miniDraw(){ const c=$('#miniCanvas'); const {ctx,w,h}=fit(c); ctx.clearRect(0,0,w,h); METRO.draw(P,{ctx,w,h,x0:0,t0:0,t1:P.H,y0:2,gap:(h-4)/P.rows,lw:.8,colors:COL,k:1,focus:null,ghost:false}); }
+miniDraw(); addEventListener('resize',()=>{ miniDraw(); dirty=true; });
+
+/* ================= STATIONS : défilement horizontal ================= */
+const stRun=$('#stRun'), stTrack=$('#stTrack'), stLine=$('#stLine'), stFill=$('#stFill'), cards=$$('.card');
+const names=['Entrepôt','Journée','Diagnostic','Plans','Suivi'];
+stLine.insertAdjacentHTML('beforeend',names.map((n,i)=>`<button class="stp" type="button" data-i="${i}" style="left:${4+i*23}%"><i></i><span>${n}</span></button>`).join(''));
+const stps=$$('.stp');
+stps.forEach((b,i)=>b.addEventListener('click',()=>{ const r=stRun.getBoundingClientRect(), y=scrollY+r.top+(r.height-innerHeight)*(i/(cards.length-1)); go(y); }));
+
+/* ================= BLACK FRIDAY : la course ================= */
+(function race(){
+  const svg=$('#race'), W=1200, Hh=580, L=56, R=110, T=20, B=210, n=MEGA.lateBase.length-1, max=1400;
+  const X=i=>L+i/n*(W-L-R), Y=v=>T+(1-v/max)*(Hh-T-B);
+  let s='';
+  [0,250,500,750,1000,1250].forEach(v=>{ s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L-10}" y="${Y(v)+4}" text-anchor="end">${fr(v)}</text>`; });
+  for(let h=0;h<=12;h+=2){ const i=h*12; s+=`<text class="ax" x="${X(i)}" y="${Y(0)+20}" text-anchor="middle">${String(MEGA.start+h).padStart(2,'0')}:00</text>`; }
+  const path=a=>'M'+a.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L');
+  const area='M'+MEGA.lateBase.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('L')+'L'+MEGA.latePlan.map((v,i)=>[X(i),Y(v)]).reverse().map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L')+'Z';
+  s+=`<defs><pattern id="hz" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="10" fill="var(--accent)" opacity=".28"/></pattern></defs><path id="gapA" d="${area}" fill="url(#hz)"/><text id="gapT" class="end" x="${X(n*.9)}" y="${Y(820)}" text-anchor="end" fill="var(--accent)">918 retards évités</text>`;
+  s+=`<path class="curve" id="cB" d="${path(MEGA.lateBase)}" stroke="var(--coral)"/><path class="curve" id="cP" d="${path(MEGA.latePlan)}" stroke="var(--accent)"/>`;
+  s+=`<text class="end" id="eB" x="${X(n)+12}" y="${Y(MEGA.lateBase[n])+5}" fill="var(--coral)">1 248</text><text class="end" id="eP" x="${X(n)+12}" y="${Y(MEGA.latePlan[n])+5}" fill="var(--accent)">330</text>`;
+  /* les dix imprévus, comme les arrêts d'une ligne */
+  const EV=[[0,'3 intérimaires absents'],[150,'Chariot en panne'],[180,'Camion fournisseur'],[240,'Préparateur absent'],[270,'Vente flash'],[315,'Trieur en panne'],[330,'Pharmacienne indisponible'],[405,'Chambre froide bloquée'],[480,'Chef d\'équipe malade'],[540,'Commande urgente']];
+  const ry=Y(0)+112; s+=`<line class="rail" x1="${L}" x2="${W-R}" y1="${ry}" y2="${ry}"/>`;
+  EV.forEach(([m,l],j)=>{ const x=X(m/5), tier=[-1,1,-2,2][j%4], dy=tier<0?(tier===-1?-16:-50):(tier===1?26:60), anc=j===0?'start':j===EV.length-1?'end':'middle';
+    s+=`<line x1="${x}" x2="${x}" y1="${ry}" y2="${ry+dy*.55}" stroke="var(--coral)" stroke-width="1.5" opacity=".6"/><circle class="stopc" cx="${x}" cy="${ry}" r="7"/><text class="stopt" x="${x}" y="${dy<0?ry+dy:ry+dy-14}" text-anchor="${anc}">${clock(m,MEGA.start)}</text><text class="stopl" x="${x}" y="${dy<0?ry+dy-14:ry+dy}" text-anchor="${anc}">${esc(l)}</text>`; });
+  svg.innerHTML=s;
+  const cb=$('#cB'), cp=$('#cP'), eB=$('#eB'), eP=$('#eP');
+  [cb,cp].forEach(p=>{ const Lg=p.getTotalLength(); p.style.strokeDasharray=Lg; p.style.strokeDashoffset=RM?0:Lg; });
+  const gA=$('#gapA'), gT=$('#gapT'); [eB,eP,gA,gT].forEach(e=>e.style.opacity=RM?1:0);
+  new IntersectionObserver((es,o)=>es.forEach(e=>{ if(!e.isIntersecting) return; o.disconnect(); if(RM) return;
+    [cb,cp].forEach((p,i)=>{ p.style.transition=`stroke-dashoffset 2.6s cubic-bezier(.45,0,.2,1) ${i*.25}s`; p.style.strokeDashoffset=0; });
+    [eB,eP,gA,gT].forEach((t,i)=>{ t.style.transition=`opacity .8s ${2.4+i*.2}s`; t.style.opacity=1; }); }),{threshold:.4}).observe(svg);
+})();
+
+/* ================= ACCÈS ================= */
+$$('.os button').forEach(b=>b.addEventListener('click',()=>{ $$('.os button').forEach(x=>x.setAttribute('aria-selected',x===b)); $$('.howto').forEach(o=>o.hidden=o.dataset.os!==b.dataset.os); }));
+if(/android/i.test(navigator.userAgent)) $('.os button[data-os="and"]').click();
+function qr(){ const box=$('#qr'); if(!window.qrcode){ box.innerHTML='<span style="font-size:12px;color:#16181B;text-align:center">QR indisponible</span>'; return; }
+  const q=window.qrcode(0,'M'); q.addData(appAbs); q.make(); box.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true}); }
+addEventListener('load',qr);
+const cp=$('#copy');
+cp.addEventListener('click',()=>{ const t=$('#mail').textContent;
+  const sel=()=>{const r=document.createRange(); r.selectNodeContents($('#mail')); const w=getSelection(); w.removeAllRanges(); w.addRange(r); cp.textContent='Sélectionnée';};
+  try{ navigator.clipboard.writeText(t).then(()=>cp.textContent='Copiée',sel); }catch(e){ sel(); } });
+
+/* pied : la ligne du milieu change de voie quand on arrive */
+const lm=$('#laneMove'), lanes=$$('#lanes path');
+lanes.forEach(p=>{ const Lg=p.getTotalLength(); p.style.strokeDasharray=Lg; p.style.strokeDashoffset=RM?0:Lg; });
+new IntersectionObserver((es,o)=>es.forEach(e=>{ if(!e.isIntersecting) return; o.disconnect(); lanes.forEach((p,i)=>{ p.style.transition=`stroke-dashoffset 1.6s cubic-bezier(.6,0,.2,1) ${i*.15}s`; p.style.strokeDashoffset=0; }); }),{threshold:.5}).observe($('#lanes'));
+
+/* ================= DÉFILEMENT ================= */
+let lenis=null;
+function startLenis(){ if(RM||STILL||!window.Lenis||lenis) return; lenis=new window.Lenis({lerp:.1}); }
+addEventListener('load',startLenis);
+function go(y){ lenis?lenis.scrollTo(y):scrollTo({top:y,behavior:RM?'auto':'smooth'}); }
+document.addEventListener('click',e=>{ const a=e.target.closest('a[href^="#"]'); if(!a) return; const t=document.getElementById(a.getAttribute('href').slice(1)); if(!t) return; e.preventDefault(); go(a.getAttribute('href')==='#haut'?0:scrollY+t.getBoundingClientRect().top-(t.id==='journee'||t.id==='ecrans'?0:64)); });
+const prog=el=>{ const r=el.getBoundingClientRect(); return clamp(-r.top/Math.max(1,r.height-innerHeight)); };
+const pf=$('#progFill'), phd=$('#progHead'), navA=$$('[data-nav]'), secs=['journee','ecrans','black-friday','suivi','acces'].map(id=>document.getElementById(id));
+let lastT=0, stOn=-1;
+function loop(now){
+  if(lenis) lenis.raf(now);
+  const dt=Math.min(.1,(now-(lastT||now))/1000); lastT=now;
+  /* progression de page */
+  const P_=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight));
+  pf.style.width=(P_*100)+'%'; phd.style.left=`calc(7px + (100% - 14px) * ${P_})`;
+  let cur=-1; secs.forEach((s,i)=>{ const r=s.getBoundingClientRect(); if(r.top<innerHeight*.45&&r.bottom>innerHeight*.45) cur=i; });
+  navA.forEach((a,i)=>a.setAttribute('aria-current',i===cur));
+  /* la journée */
+  const dr=day.getBoundingClientRect();
+  if(dr.bottom>0&&dr.top<innerHeight){ dayTarget=prog(day)*P.H; const nt=(RM||STILL)?dayTarget:lerp(dayT,dayTarget,1-Math.exp(-dt*9)); if(Math.abs(nt-dayT)>.02||dirty){ dayT=Math.abs(nt-dayTarget)<.05?dayTarget:nt; dayDraw(); dayHud(); dirty=false; } }
+  /* les stations */
+  if(innerWidth>1000){ const sr=stRun.getBoundingClientRect(); if(sr.bottom>0&&sr.top<innerHeight){ const p=prog(stRun), fi=p*(cards.length-1), a=Math.floor(fi), b=Math.min(cards.length-1,a+1), f=eio(fi-a); const cx=c=>c.offsetLeft+c.offsetWidth/2, x=lerp(cx(cards[a]),cx(cards[b]),f)-innerWidth/2; stTrack.style.transform=`translate3d(${-x}px,0,0)`;
+    const i=Math.min(cards.length-1,Math.round(p*(cards.length-1))); stFill.style.width=(4+p*92)+'%';
+    if(i!==stOn){ stOn=i; stps.forEach((b,j)=>{ b.classList.toggle('on',j===i); b.classList.toggle('done',j<i); }); } } }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
