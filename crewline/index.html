@@ -237,49 +237,28 @@ button{font-family:inherit}
 .leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--g-muted)}
 .leg span{display:inline-flex;align-items:center;gap:8px}
 .leg i{width:22px;height:5px;border-radius:3px}
-/* Tableau des départs (Black Friday) */
-.dep-sub{margin:6px 0 0;font-size:14px;color:var(--g-muted);max-width:56ch}
-.dep-sw{display:inline-flex;border:1.5px solid var(--g-line);border-radius:99px;padding:3px;gap:2px;background:var(--g)}
-.dep-sw button{font:700 13px var(--display);color:var(--g-muted);background:none;border:0;border-radius:99px;padding:8px 14px;cursor:pointer;transition:background .3s,color .3s}
-.dep-sw button[aria-pressed="true"][data-m="base"]{background:var(--coral);color:var(--g)}
-.dep-sw button[aria-pressed="true"][data-m="plan"]{background:var(--accent);color:var(--g)}
-.dep{background:var(--g);border:1px solid var(--g-line);border-radius:10px;overflow:hidden;font-family:var(--data)}
-.dep-h,.dep-r{display:grid;grid-template-columns:76px minmax(0,1fr) 110px 260px;gap:14px;align-items:center;padding:0 18px}
-.dep-h{height:38px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--g-muted);border-bottom:1px solid var(--g-line)}
-.dep .n{text-align:right}
-.dep-r{min-height:44px;border-bottom:1px solid #24272C;color:var(--g-ink);font-size:14px;transition:background .5s}
-.dep-r:nth-child(even){background:#1A1C1F}
-.dep-r .t{color:var(--accent);font-weight:600;font-size:17px;letter-spacing:.02em}
-.dep-r .d{font-family:var(--display);font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dep-r .n{color:var(--g-muted);font-variant-numeric:tabular-nums}
-.dep-r .st{display:flex;align-items:center;gap:8px;justify-content:flex-start}
-.flap{display:inline-flex;gap:2px}
-.flap i{font-style:normal;display:inline-grid;place-items:center;min-width:.9em;height:1.65em;padding:0 1px;background:linear-gradient(#30343A 50%,#282B30 50%);border-radius:2px;font-weight:600;font-size:13px;color:var(--g-ink);position:relative}
-.flap i.sp{background:none!important;min-width:.4em}
-.dep-r.ok .flap i{color:#8FD3A8}
-.dep-r.late .flap i{background:linear-gradient(#FF7A5C 50%,#F26A4B 50%);color:var(--g)}
-.dep-r.late{background:color-mix(in srgb,var(--coral) 12%,transparent)!important}
-.dep-r.saved{background:color-mix(in srgb,var(--accent) 12%,transparent)!important}
-.dep-r .gain{font:700 11.5px var(--display);color:var(--g);background:var(--accent);border-radius:99px;padding:3px 8px;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .4s .5s,transform .4s .5s}
-.dep-r .gain:empty{display:none}
-.dep-r.saved .gain{opacity:1;transform:none}
-.dep-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:16px 18px 18px;border-top:1px solid var(--g-line)}
-.dep-f span{display:block;font:700 12.5px var(--display);color:var(--g-muted);margin-bottom:4px}
-.dep-f b{font:600 clamp(34px,4.4vw,56px) var(--data);line-height:1;font-variant-numeric:tabular-nums;color:var(--coral);transition:color .4s}
-.dep[data-m="plan"] .dep-f b{color:var(--accent)}
-.dep-win{text-align:right;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s}
-.dep[data-m="plan"] .dep-win{opacity:1;transform:none}
-@media (max-width:900px){
-  .chart{overflow-x:visible}
-  .dep-h,.dep-r{grid-template-columns:50px minmax(0,1fr) auto;gap:10px;padding:0 12px}
-  .dep .n{display:none}
-  .dep-r{min-height:48px;padding-block:6px}
-  .dep-r .d{white-space:normal;font-size:13px;line-height:1.25}
-  .dep-r .t{font-size:14px}
-  .dep-r .st{flex-direction:column;align-items:flex-end;gap:4px}
-  .flap{gap:1px}.flap i{font-size:10.5px;min-width:.85em}
-  .dep-sw{width:100%}.dep-sw button{flex:1;padding:8px 6px;font-size:12px}
-}
+/* Montagnes russes (Black Friday) */
+.cs-sub{margin:6px 0 0;font-size:14px;color:var(--g-muted);max-width:60ch}
+.cs-n{font-family:var(--data);font-weight:600}
+#coaster{display:block;width:100%;height:auto;overflow:visible}
+#coaster .grid{stroke:var(--g-line);stroke-width:1}
+#coaster .ax{fill:var(--g-muted);font:500 12px var(--data)}
+#coaster .curve{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#coaster .cb{stroke:var(--coral);stroke-width:4}
+#coaster .cp{stroke:var(--accent);stroke-width:5}
+#coaster .rail{stroke:var(--accent);stroke-width:1.5;opacity:.35}
+#coaster .pin circle{fill:var(--g2);stroke:var(--coral);stroke-width:3}
+#coaster .pin line{stroke:var(--coral);stroke-width:1.2;stroke-dasharray:2 3;opacity:.7}
+#coaster .pin .pl{fill:var(--g-ink);font:700 12.5px var(--display)}
+#coaster .pin .pt{fill:var(--coral);font:600 11px var(--data)}
+#coaster .pin.big .pl{font-size:15px}
+#coaster .pk{fill:var(--accent);font:600 12px var(--data)}
+#coaster .rf{fill:var(--accent)}
+#coaster .rft{fill:var(--g-muted);font:500 11px var(--data)}
+#coaster .cart{fill:var(--accent);stroke:var(--g2);stroke-width:3}
+#coaster .gapt{fill:var(--accent);font:600 15px var(--data)}
+#coaster .pin,#coaster .lab{transition:opacity .5s,transform .5s}
+@media (max-width:900px){#coaster{min-width:820px}}
 #race{display:block;width:100%;height:auto;overflow:visible}
 #race .grid{stroke:var(--g-line);stroke-width:1}
 #race .ax{fill:var(--g-muted);font:500 12px var(--data)}
@@ -496,16 +475,11 @@ details p{padding:0 0 22px 36px;color:var(--muted);max-width:66ch;font-size:16px
   <div class="wrap">
     <div class="bf-head">
       <div><span class="eyebrow" style="--c:var(--coral)"><i></i>Stress test</span><h2 class="h2" id="h-bf">Une journée volontairement impossible</h2></div>
-      <p class="lede">Une plateforme logistique à quatre clients, un Black Friday de 5 h à 17 h, dix imprévus en cascade. Voici chaque départ de la journée, sans rien faire puis avec le plan, tel que le moteur l'a calculé.</p>
+      <p class="lede">Une plateforme logistique à quatre clients, un Black Friday de 5 h à 17 h, dix imprévus en cascade. Voici la cadence de la plateforme, quart d'heure par quart d'heure, sans rien faire puis avec le plan, telle que le moteur l'a calculée.</p>
     </div>
     <div class="chart">
-      <div class="chart-top"><div><h3>Tableau des départs</h3><p class="dep-sub">Les dix imprévus tombent entre 05:00 et 14:00. Les retards, eux, n'apparaissent qu'au départ des camions.</p></div>
-        <div class="dep-sw" role="group" aria-label="Scénario affiché"><button type="button" data-m="base" aria-pressed="true">Sans rien changer</button><button type="button" data-m="plan" aria-pressed="false">Avec Crewline · 5 renforts</button></div></div>
-      <div class="dep" id="dep" data-m="base">
-        <div class="dep-h"><span>Heure</span><span>Départ</span><span class="n">Commandes</span><span>Statut</span></div>
-        <div id="depRows"></div>
-        <div class="dep-f"><div><span>Commandes en retard</span><b id="depTot">1&#8201;248</b></div><div class="dep-win"><span>Retards évités</span><b>918</b></div></div>
-      </div>
+      <div class="chart-top"><div><h3>Commandes expédiées, quart d'heure par quart d'heure</h3><p class="cs-sub">Chaque imprévu fait plonger la cadence. Le plan la fait remonter plus vite.</p></div><div class="leg"><span><i style="background:var(--coral)"></i>Sans rien changer · <b class="cs-n" style="color:var(--coral)">1 248</b> en retard</span><span><i style="background:var(--accent)"></i>Avec le plan de Crewline · <b class="cs-n" style="color:var(--accent)">330</b> en retard</span></div></div>
+      <svg id="coaster" viewBox="0 0 1200 560" role="img" aria-label="Commandes expédiées par quart d'heure de 5 h à 17 h. La cadence plonge à chaque imprévu, jusqu'à 62 commandes au moment de la panne du trieur. Avec le plan, elle remonte plus haut l'après-midi : 1 248 commandes en retard sans changement, 330 avec le plan."></svg>
     </div>
     <div class="bf-nums">
       <div><b>26</b><span>postes, trieur plafonné à 1 300 colis/h</span></div>
@@ -873,36 +847,51 @@ const stps=$$('.stp');
 stps.forEach((b,i)=>b.addEventListener('click',()=>{ const r=stRun.getBoundingClientRect(), y=scrollY+r.top+(r.height-innerHeight)*(i/(cards.length-1)); go(y); }));
 
 /* ================= BLACK FRIDAY : la course ================= */
-(function departures(){
-  /* Chiffres tirés du moteur : même journée, même plan (5 renforts) que le reste de la page */
-  const ROWS=[['10:00','Pharma express',176,0,0],['10:30','Colissimo · mono',1040,0,0],['11:00','Colissimo multi · Magasins Nord',560,0,0],['12:00','Cross-dock fournisseurs',96,0,0],
-    ['12:30','Chronopost · Pharma express',1152,0,0],['12:45','Pharma entrante, chaîne du froid',48,4,4,1],['13:00','Multi zones A-B · Électroménager',504,0,0],['14:00','Magasins Centre',160,0,0],
-    ['14:30','DPD · mono',896,0,0],['15:00','DPD multi · Cadeaux · Vente flash',1728,391,0],['15:30','Pharma express',176,24,24],['16:00','Cross-dock fournisseurs',96,0,0],
-    ['16:30','UPS · Multi A-B · Magasins Sud · Électroménager',1400,829,302]];
-  const box=$('#depRows'), dep=$('#dep'), tot=$('#depTot'), sw=$$('.dep-sw button');
-  box.innerHTML=ROWS.map(r=>`<div class="dep-r"><span class="t">${r[0]}</span><span class="d">${esc(r[1])}</span><span class="n">${fr(r[2])}</span><span class="st"><span class="flap"></span><span class="gain"></span></span></div>`).join('');
-  const els=[...box.children], CH='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const label=(r,m)=>{ const v=m==='base'?r[3]:r[4]; return v? (fr(v)+(r[5]?' EN RETARD':' À QUAI')) : (r[5]?'ARRIVÉ':'PARTI'); };
-  const cells=t=>[...t].map(c=>c===' '?'<i class="sp"> </i>':`<i>${esc(c)}</i>`).join('');
-  let timers=[], mode=null;
-  function flapTo(el,text,delay){ const f=el.querySelector('.flap'); if(RM){ f.innerHTML=cells(text); return; }
-    const old=f.textContent; if(old===text) return; f.innerHTML=cells(text); const is=[...f.children], ch=[...text];
-    is.forEach((x,j)=>{ if(ch[j]!==' ') x.textContent=CH[(Math.random()*CH.length)|0]; });
-    timers.push(setTimeout(()=>{ let k=0; const iv=setInterval(()=>{ k++; is.forEach((x,j)=>{ if(ch[j]===' ') return; x.textContent= k>3+j? ch[j] : CH[(Math.random()*CH.length)|0]; }); if(k>4+ch.length) clearInterval(iv); },45); timers.push(iv); },delay)); }
-  function paint(m,anim){ els.forEach((el,i)=>{ const r=ROWS[i], v=m==='base'?r[3]:r[4], sv=r[3]-r[4];
-      el.classList.toggle('late',v>0); el.classList.toggle('ok',v===0); el.classList.toggle('saved',m==='plan'&&sv>0);
-      el.querySelector('.gain').textContent=sv>0&&m==='plan'?`${fr(sv)} sauvées`:'';
-      if(anim) flapTo(el,label(r,m),i*60); else el.querySelector('.flap').innerHTML=cells(label(r,m)); }); }
-  function show(m){ if(m===mode) return; const from=mode; mode=m; timers.forEach(t=>{clearTimeout(t);clearInterval(t)}); timers=[];
-    dep.dataset.m=m; sw.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m))); paint(m,true);
-    const z=m==='base'?1248:330, a=from===null?0:(m==='base'?330:1248); if(RM){ tot.textContent=fr(z).replace(' ','\u2009'); return; }
-    const t0=performance.now(); (function tick(now){ const p=Math.min(1,(now-t0)/1100), e=1-Math.pow(1-p,3); tot.textContent=fr(a+(z-a)*e).replace(' ','\u2009'); if(p<1) requestAnimationFrame(tick); })(t0); }
-  let auto=null, user=false;
-  sw.forEach(b=>b.addEventListener('click',()=>{ user=true; clearInterval(auto); show(b.dataset.m); }));
-  paint('base',false); mode='base';
-  new IntersectionObserver((es,o)=>es.forEach(e=>{ if(!e.isIntersecting) return; o.disconnect(); if(RM) return;
-    els.forEach(el=>el.querySelector('.flap').textContent=''); mode=null; show('base');
-    auto=setInterval(()=>{ if(!user) show(mode==='base'?'plan':'base'); },6500); }),{threshold:.35}).observe(dep);
+(function coaster(){
+  /* Commandes terminées par quart d'heure, 05:00 → 17:00, calculées par le moteur (même journée, même plan à 5 renforts) */
+  const B=[30, 126, 127, 124, 127, 119, 121, 132, 152, 138, 139, 62, 107, 168, 207, 182, 249, 299, 277, 248, 198, 99, 62, 156, 318, 301, 253, 305, 265, 298, 344, 335, 216, 183, 169, 108, 106, 139, 108, 176, 160, 158, 152, 150, 143, 142, 114, 71], P=[30, 126, 127, 124, 127, 119, 121, 129, 140, 135, 114, 62, 125, 166, 190, 192, 270, 299, 277, 248, 234, 119, 59, 163, 334, 320, 253, 304, 284, 267, 290, 342, 271, 278, 261, 160, 160, 267, 163, 177, 161, 157, 152, 150, 143, 118, 88, 88];
+  const svg=$('#coaster'), W=1200, H=560, L=56, R=24, T=56, Bm=150, n=B.length, max=400;
+  const X=i=>L+(i+.5)/n*(W-L-R), Y=v=>T+(1-v/max)*(H-T-Bm), Xm=m=>L+m/720*(W-L-R);
+  const smooth=a=>{ const p=a.map((v,i)=>[X(i),Y(v)]); let d=`M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;
+    for(let i=0;i<p.length-1;i++){ const p0=p[i-1]||p[i], p1=p[i], p2=p[i+1], p3=p[i+2]||p2, k=.18;
+      d+=`C${(p1[0]+(p2[0]-p0[0])*k).toFixed(1)},${(p1[1]+(p2[1]-p0[1])*k).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])*k).toFixed(1)},${(p2[1]-(p3[1]-p1[1])*k).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`; }
+    return d; };
+  let s=`<defs><linearGradient id="csG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient>
+    <pattern id="csH" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.5" height="9" fill="var(--accent)" opacity=".45"/></pattern>
+    <clipPath id="csC"><rect id="csR" x="0" y="0" width="${RM?W:0}" height="${H}"/></clipPath></defs>`;
+  [0,100,200,300].forEach(v=>{ s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L-10}" y="${Y(v)+4}" text-anchor="end">${v}</text>`; });
+  for(let h=0;h<=12;h+=2) s+=`<text class="ax" x="${Xm(h*60)}" y="${Y(0)+22}" text-anchor="middle">${String(5+h).padStart(2,'0')}:00</text>`;
+  const dB=smooth(B), dP=smooth(P), base=` L${X(n-1)},${Y(0)} L${X(0)},${Y(0)} Z`;
+  // zone gagnée : sous la courbe du plan, au-dessus de celle de base
+  s+=`<g clip-path="url(#csC)"><path d="${dP}${base}" fill="url(#csG)"/>
+    <mask id="csM"><rect width="${W}" height="${H}" fill="#fff"/><path d="${dB}${base}" fill="#000"/></mask>
+    <path d="${dP}${base}" fill="url(#csH)" mask="url(#csM)"/>
+    <path class="curve cb" d="${dB}"/><path class="curve cp" id="csP" d="${dP}"/></g>`;
+  // les imprévus, épinglés sur la courbe
+  const EV=[[0,'3 intérimaires absents',-1],[150,'Chariot en panne',1,0,'end'],[180,'Camion fournisseur',-1],[240,'Préparateur absent',1,0,'end'],[270,'Vente flash',-1,0,'end'],[315,'Trieur en panne',1,1,'start'],[330,'Pharmacienne absente',-1,0,'start'],[405,'Chambre froide bloquée',1,0,'start'],[480,"Chef d'équipe malade",-1],[540,'Commande urgente',1,0,'start']];
+  const at=m=>{ const f=m/15-.5, i=Math.max(0,Math.min(n-1,Math.floor(f))), j=Math.min(n-1,i+1), t=Math.max(0,Math.min(1,f-i)); return B[i]+(B[j]-B[i])*t; };
+  EV.forEach(([m,l,up,big,an],j)=>{ const x=Math.max(X(0),Xm(m)), y=Y(at(m)), ty=up<0? Math.min(y-44, T-6+(j%2)*0) : Y(0)+56+(j%2?20:0), anc=an||(j===0?'start':'middle');
+    s+=`<g class="pin${big?' big':''}" data-m="${m}" style="opacity:${RM?1:0}"><line x1="${x}" x2="${x}" y1="${up<0?ty+8:y+8}" y2="${up<0?y-8:ty-26}"/><circle cx="${x}" cy="${y}" r="6.5"/>
+      <text class="pt" x="${x}" y="${up<0?ty-16:ty-12}" text-anchor="${anc}">${clock(m,5)}</text><text class="pl" x="${x}" y="${up<0?ty:ty+4}" text-anchor="${anc}">${esc(l)}</text></g>`; });
+  // les cinq renforts, sur le rail du bas
+  const RF=[[45,'Assia'],[180,'Romane'],[285,'Naël'],[345,'Anis, Mohamed']], ry=Y(0)+118;
+  s+=`<line class="rail" x1="${L}" x2="${W-R}" y1="${ry}" y2="${ry}"/><text class="rft" x="${L}" y="${ry+24}">RENFORTS DU PLAN</text>`;
+  RF.forEach(([m,l],k)=>{ const x=Xm(m); s+=`<g class="lab" data-m="${m}" style="opacity:${RM?1:0}"><path class="rf" d="M${x} ${ry-7} L${x+7} ${ry} L${x} ${ry+7} L${x-7} ${ry} Z"/><text class="rft" x="${x}" y="${k%2?ry+24:ry-14}" text-anchor="middle">${clock(m,5)} ${esc(l)}</text></g>`; });
+  s+=`<text class="gapt lab" data-m="600" x="${X(38)}" y="${Y(345)}" text-anchor="middle" style="opacity:${RM?1:0}">918 retards évités</text>`;
+  s+=`<circle class="cart" id="csCart" r="9" cx="${X(0)}" cy="${Y(P[0])}" style="opacity:${RM?0:1}"/>`;
+  svg.innerHTML=s;
+  if(RM) return;
+  const rect=$('#csR'), cart=$('#csCart'), path=$('#csP'), len=path.getTotalLength(), marks=[...svg.querySelectorAll('[data-m]')];
+  new IntersectionObserver((es,o)=>es.forEach(e=>{ if(!e.isIntersecting) return; o.disconnect();
+    const t0=performance.now(), D=6200;
+    (function tick(now){ const p=Math.min(1,(now-t0)/D), e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2, xr=L+(W-L-R)*e;
+      rect.setAttribute('width',xr);
+      // le wagon suit la courbe du plan
+      let lo=0, hi=len; for(let k=0;k<22;k++){ const mid=(lo+hi)/2; if(path.getPointAtLength(mid).x<xr) lo=mid; else hi=mid; }
+      const pt=path.getPointAtLength(lo); cart.setAttribute('cx',pt.x); cart.setAttribute('cy',pt.y);
+      marks.forEach(g=>{ if(Xm(+g.dataset.m)<=xr+4) g.style.opacity=1; });
+      if(p<1) requestAnimationFrame(tick); else cart.style.opacity=0; })(t0);
+  }),{threshold:.4}).observe(svg);
 })();
 
 /* ================= ACCÈS ================= */
