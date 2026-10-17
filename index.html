@@ -278,6 +278,39 @@ h2{margin:0;font-weight:900;font-stretch:112%;font-size:clamp(32px,4.6vw,60px);l
   .feature.cw .phone.p1{left:22%}
 }
 
+/* Crewline : heatmap (le problème) + carte des renforts (la réponse) */
+.cw-stage .stage-in{padding-bottom:30%}
+.feature.cw .cw-stage .browser{width:86%;margin-left:auto;transform:rotate(1deg)}
+.cw-card{position:absolute;left:-2%;bottom:0;width:62%;aspect-ratio:8/5;background:#F2F0EA;border-radius:8px;border:1.5px solid #16181B;box-shadow:0 26px 60px rgba(0,0,0,.6);transform:rotate(-2deg) translateZ(60px);overflow:hidden}
+.cw-plan svg{width:100%;height:100%;display:block}
+.cw-plan text{font-family:var(--display);fill:#16181B}
+.cw-plan .t1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.cw-plan .t2{font-family:var(--mono);font-size:12px;fill:#5F5C55;letter-spacing:.04em}
+.cw-plan .ax line{stroke:#DEDACF}
+.cw-plan .ax text{font-family:var(--mono);font-size:12px;fill:#5F5C55;text-anchor:middle}
+.cw-plan .lane text{font-size:15px;font-weight:700}
+.cw-plan .lane line{stroke-width:6;stroke-linecap:round;opacity:.28}
+.cw-plan .mv{fill:none;stroke:#F5C400;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1 1;stroke-dashoffset:0}
+.cw-plan .tag rect{fill:#16181B}
+.cw-plan .tag text{fill:#F2F0EA;font-size:13px;font-weight:700}
+.cw-plan .tag .hr{fill:#F5C400;font-family:var(--mono);font-weight:500}
+.cw-plan .res rect.r0{fill:#fff;stroke:#16181B;stroke-width:2}
+.cw-plan .res rect.r1{fill:#F5C400}
+.cw-plan .res .rl{font-size:11.5px;font-weight:700;fill:#5F5C55}
+.cw-plan .res .rv{font-family:var(--mono);font-size:30px;font-weight:600}
+@media (prefers-reduced-motion:no-preference){
+  .cw-card{animation:float 7s ease-in-out -2s infinite}
+  .cw-plan.go .mv{animation:cwdraw 1.4s var(--ease) both}
+  .cw-plan.go .m2{animation-delay:.5s}
+  .cw-plan.wait .mv{stroke-dashoffset:1}
+  .cw-plan.wait .tag,.cw-plan.wait .res{opacity:0}
+  .cw-plan.go .tag{animation:fadeUp .6s var(--ease) both}
+  .cw-plan.go .g1{animation-delay:.9s}.cw-plan.go .g2{animation-delay:1.4s}
+  .cw-plan.go .res{animation:fadeUp .6s var(--ease) 1.8s both}
+  @keyframes cwdraw{from{stroke-dashoffset:1}}
+}
+@media (max-width:860px){ .cw-card{width:80%;left:1%} .feature.cw .cw-stage .browser{width:90%;margin-right:1%} .cw-stage .stage-in{padding-bottom:40%} }
+
 /* ---------- Cursor (desktop only) ---------- */
 .cur{position:fixed;left:0;top:0;z-index:100;pointer-events:none;display:none}
 .cur .ring{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid var(--ink);border-radius:50%;transition:width .35s var(--ease),height .35s var(--ease),margin .35s var(--ease),background .35s,border-color .35s;display:grid;place-items:center}
@@ -710,11 +743,30 @@ html.ld .loader.out{transform:translateY(-100%)}
         <a class="btn mag" href="crewline/" target="_blank" rel="noopener" data-cur="link">Voir le site <span class="arr">↗</span></a>
       </div>
     </div>
-    <figure class="stage">
+    <figure class="stage cw-stage">
       <div class="stage-in">
         <div class="browser"><div class="bar"><i></i><i></i><i></i><span>gaythmejai.com/crewline</span></div><img src="images/crewline-charge.webp" alt="Écran Diagnostic de Crewline : charge de chaque poste par créneau, en rouge les fenêtres où il manque du monde" width="1600" height="1108" loading="lazy"></div>
-        <div class="phone p1"><img src="images/crewline-diagnostic.webp" alt="Diagnostic sur téléphone : Emballage multi n'aura pas assez de monde entre 06:35 et 13:20" width="780" height="1560" loading="lazy"></div>
-        <div class="phone p2"><img src="images/crewline-plans.webp" alt="Plans sur téléphone : ne rien changer 169 retards, un renfort 41, moins de retards 0" width="780" height="1560" loading="lazy"></div>
+        <div class="cw-card cw-plan" id="cwplan">
+          <svg viewBox="0 0 800 500" role="img" aria-label="Le plan retenu : Louise passe du picking froid à l'emballage multi à 07:45, Manon quitte la zone A pour renforcer le picking mono de 09:00 à 10:00. Retards : 169 sans rien changer, 0 avec le plan.">
+                <text x="40" y="58" class="t1">Le plan retenu : 2 renforts</text>
+                <text x="40" y="84" class="t2">Journée type · hub e-commerce · 55 personnes</text>
+                <g class="ax">
+                  <line x1="200" x2="760" y1="430" y2="430"/>
+                  <text x="200" y="456">06:00</text><text x="340" y="456">08:00</text><text x="480" y="456">10:00</text><text x="620" y="456">12:00</text><text x="760" y="456">14:00</text>
+                </g>
+                <g class="lane"><circle cx="48" cy="150" r="6" fill="#5D7A00"/><text x="62" y="155">Picking mono</text><line x1="200" x2="760" y1="150" y2="150" stroke="#5D7A00"/></g>
+                <g class="lane"><circle cx="48" cy="230" r="6" fill="#8D6E63"/><text x="62" y="235">Picking zone A</text><line x1="200" x2="760" y1="230" y2="230" stroke="#8D6E63"/></g>
+                <g class="lane"><circle cx="48" cy="310" r="6" fill="#1F6FB8"/><text x="62" y="315">Picking froid</text><line x1="200" x2="760" y1="310" y2="310" stroke="#1F6FB8"/></g>
+                <g class="lane"><circle cx="48" cy="390" r="6" fill="#C2185B"/><text x="62" y="395">Emballage multi</text><line x1="200" x2="760" y1="390" y2="390" stroke="#C2185B"/></g>
+                <path class="mv m1" pathLength="1" d="M200 310 H322 L346 390 H760"/>
+                <path class="mv m2" pathLength="1" d="M200 230 H400 L416 150 H474 L490 230 H760"/>
+                <g class="tag g1"><rect x="352" y="334" width="236" height="30" rx="5"/><text x="364" y="354"><tspan class="hr">07:45</tspan> Louise → Emballage multi</text></g>
+                <g class="tag g2"><rect x="496" y="168" width="220" height="30" rx="5"/><text x="508" y="188"><tspan class="hr">09:00</tspan> Manon → Picking mono</text></g>
+                <g class="res"><rect x="512" y="20" width="248" height="70" rx="6" class="r0"/><rect x="640" y="21" width="119" height="68" class="r1"/>
+                  <text x="526" y="44" class="rl">Sans rien changer</text><text x="526" y="78" class="rv">169</text>
+                  <text x="654" y="44" class="rl">Avec le plan</text><text x="654" y="78" class="rv">0</text></g>
+              </svg>
+        </div>
       </div>
       <figcaption>Captures de l'app, journée d'exemple aux cadences fictives</figcaption>
     </figure>
@@ -972,6 +1024,13 @@ html.ld .loader.out{transform:translateY(-100%)}
       stage.style.setProperty('--ry', (x * 10).toFixed(2) + 'deg'); stage.style.setProperty('--rx', (-y * 8).toFixed(2) + 'deg'); });
     stage.addEventListener('pointerleave', () => { stage.style.setProperty('--ry', '0deg'); stage.style.setProperty('--rx', '0deg'); });
   });
+
+  /* ---------- Crewline : la carte des renforts se trace à l'arrivée ---------- */
+  (() => {
+    const c = $('#cwplan'); if (!c || reduce) return;
+    c.classList.add('wait');
+    new IntersectionObserver((es, o) => es.forEach(e => { if (e.isIntersecting) { c.classList.remove('wait'); c.classList.add('go'); o.disconnect(); } }), { threshold: .5 }).observe(c);
+  })();
 
   /* ---------- Scroll-driven: progress, marquee, career line, active nav ---------- */
   const prog = $('#progress'), track = $('#track'), flow = $('#flow');
