@@ -244,8 +244,20 @@ button{font-family:inherit}
 #coaster .grid{stroke:var(--g-line);stroke-width:1}
 #coaster .ax{fill:var(--g-muted);font:500 12px var(--data)}
 #coaster .curve{fill:none;stroke-linecap:round;stroke-linejoin:round}
-#coaster .cb{stroke:var(--coral);stroke-width:4}
+#coaster .cb{stroke:var(--coral);stroke-width:3;opacity:.85}
 #coaster .cp{stroke:var(--accent);stroke-width:5}
+#coaster .win{fill:var(--accent);opacity:.42}
+#coaster .pnl{fill:var(--g-muted);font:600 11.5px var(--data);letter-spacing:.08em}
+#coaster .brk,#coaster .brk2{fill:none;stroke:var(--accent);stroke-width:2}
+#coaster .gain{fill:var(--accent);font:700 15px var(--display)}
+#coaster .lb{stroke:var(--coral);stroke-width:4}
+#coaster .lp{stroke:var(--accent);stroke-width:4}
+#coaster .dotb{fill:var(--coral)}
+#coaster .callb{fill:var(--coral);font:700 14px var(--display)}
+#coaster .callp{fill:var(--accent);font:700 14px var(--display)}
+#coaster .endb{fill:var(--coral);font:600 20px var(--data)}
+#coaster .endp{fill:var(--accent);font:600 20px var(--data)}
+#coaster .big918{fill:var(--accent);font:700 40px var(--data);letter-spacing:-.02em}
 #coaster .rail{stroke:var(--accent);stroke-width:1.5;opacity:.35}
 #coaster .pin circle{fill:var(--g2);stroke:var(--coral);stroke-width:3}
 #coaster .pin line{stroke:var(--coral);stroke-width:1.2;stroke-dasharray:2 3;opacity:.7}
@@ -478,8 +490,8 @@ details p{padding:0 0 22px 36px;color:var(--muted);max-width:66ch;font-size:16px
       <p class="lede">Une plateforme logistique à quatre clients, un Black Friday de 5 h à 17 h, dix imprévus en cascade. Voici la cadence de la plateforme, quart d'heure par quart d'heure, sans rien faire puis avec le plan, telle que le moteur l'a calculée.</p>
     </div>
     <div class="chart">
-      <div class="chart-top"><div><h3>Commandes expédiées, quart d'heure par quart d'heure</h3><p class="cs-sub">Chaque imprévu fait plonger la cadence. Le plan la fait remonter plus vite.</p></div><div class="leg"><span><i style="background:var(--coral)"></i>Sans rien changer · <b class="cs-n" style="color:var(--coral)">1 248</b> en retard</span><span><i style="background:var(--accent)"></i>Avec le plan de Crewline · <b class="cs-n" style="color:var(--accent)">330</b> en retard</span></div></div>
-      <svg id="coaster" viewBox="0 0 1200 560" role="img" aria-label="Commandes expédiées par quart d'heure de 5 h à 17 h. La cadence plonge à chaque imprévu, jusqu'à 62 commandes au moment de la panne du trieur. Avec le plan, elle remonte plus haut l'après-midi : 1 248 commandes en retard sans changement, 330 avec le plan."></svg>
+      <div class="chart-top"><div><h3>La journée, vue par le moteur</h3><p class="cs-sub">En haut, la cadence plonge à chaque imprévu. En bas, les retards qu'elle prépare : sans plan, ils s'accumulent dès 10:30.</p></div><div class="leg"><span><i style="background:var(--coral)"></i>Sans rien changer · <b class="cs-n" style="color:var(--coral)">1 248</b> en retard</span><span><i style="background:var(--accent)"></i>Avec le plan de Crewline · <b class="cs-n" style="color:var(--accent)">330</b> en retard</span></div></div>
+      <svg id="coaster" viewBox="0 0 1200 800" role="img" aria-label="Commandes expédiées par quart d'heure de 5 h à 17 h. La cadence plonge à chaque imprévu, jusqu'à 62 commandes au moment de la panne du trieur. Avec le plan, elle remonte plus haut l'après-midi : 1 248 commandes en retard sans changement, 330 avec le plan."></svg>
     </div>
     <div class="bf-nums">
       <div><b>26</b><span>postes, trieur plafonné à 1 300 colis/h</span></div>
@@ -848,50 +860,69 @@ stps.forEach((b,i)=>b.addEventListener('click',()=>{ const r=stRun.getBoundingCl
 
 /* ================= BLACK FRIDAY : la course ================= */
 (function coaster(){
-  /* Commandes terminées par quart d'heure, 05:00 → 17:00, calculées par le moteur (même journée, même plan à 5 renforts) */
-  const B=[30, 126, 127, 124, 127, 119, 121, 132, 152, 138, 139, 62, 107, 168, 207, 182, 249, 299, 277, 248, 198, 99, 62, 156, 318, 301, 253, 305, 265, 298, 344, 335, 216, 183, 169, 108, 106, 139, 108, 176, 160, 158, 152, 150, 143, 142, 114, 71], P=[30, 126, 127, 124, 127, 119, 121, 129, 140, 135, 114, 62, 125, 166, 190, 192, 270, 299, 277, 248, 234, 119, 59, 163, 334, 320, 253, 304, 284, 267, 290, 342, 271, 278, 261, 160, 160, 267, 163, 177, 161, 157, 152, 150, 143, 118, 88, 88];
-  const svg=$('#coaster'), W=1200, H=560, L=56, R=24, T=56, Bm=150, n=B.length, max=400;
-  const X=i=>L+(i+.5)/n*(W-L-R), Y=v=>T+(1-v/max)*(H-T-Bm), Xm=m=>L+m/720*(W-L-R);
-  const smooth=a=>{ const p=a.map((v,i)=>[X(i),Y(v)]); let d=`M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;
-    for(let i=0;i<p.length-1;i++){ const p0=p[i-1]||p[i], p1=p[i], p2=p[i+1], p3=p[i+2]||p2, k=.18;
+  /* Données calculées par le moteur (même journée, même plan à 5 renforts).
+     Haut : commandes terminées par quart d'heure. Bas : commandes déjà dans l'entrepôt qui partiront en retard. */
+  const B=[30, 126, 127, 124, 127, 119, 121, 132, 152, 138, 139, 62, 107, 168, 207, 182, 249, 299, 277, 248, 198, 99, 62, 156, 318, 301, 253, 305, 265, 298, 344, 335, 216, 183, 169, 108, 106, 139, 108, 176, 160, 158, 152, 150, 143, 142, 114, 71], P=[30, 126, 127, 124, 127, 119, 121, 129, 140, 135, 114, 62, 125, 166, 190, 192, 270, 299, 277, 248, 234, 119, 59, 163, 334, 320, 253, 304, 284, 267, 290, 342, 271, 278, 261, 160, 160, 267, 163, 177, 161, 157, 152, 150, 143, 118, 88, 88], DB=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 311, 311, 312, 360, 391, 395, 395, 452, 574, 675, 775, 863, 959, 1070, 1191, 1234, 1248, 1248, 1248, 1248, 1248, 1248, 1248, 1248, 1248, 1248, 1248], DP=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 28, 28, 28, 28, 79, 176, 273, 316, 330, 330, 330, 330, 330, 330, 330, 330, 330, 330, 330];
+  const svg=$('#coaster'), W=1200, H=800, L=56, R=86, T=60, Y0=380, n=B.length, max=400;
+  const X=i=>L+(i+.5)/n*(W-L-R), Y=v=>T+(1-v/max)*(Y0-T), Xm=m=>L+m/720*(W-L-R);
+  const LT=520, LB=690, Yl=v=>LB-(v/1300)*(LB-LT), Xd=i=>Xm(i*15);
+  const smooth=(pts)=>{ let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for(let i=0;i<pts.length-1;i++){ const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2, k=.18;
       d+=`C${(p1[0]+(p2[0]-p0[0])*k).toFixed(1)},${(p1[1]+(p2[1]-p0[1])*k).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])*k).toFixed(1)},${(p2[1]-(p3[1]-p1[1])*k).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`; }
     return d; };
-  let s=`<defs><linearGradient id="csG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient>
-    <pattern id="csH" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.5" height="9" fill="var(--accent)" opacity=".45"/></pattern>
-    <clipPath id="csC"><rect id="csR" x="0" y="0" width="${RM?W:0}" height="${H}"/></clipPath></defs>`;
+  const line=pts=>'M'+pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join('L');
+  const pB=B.map((v,i)=>[X(i),Y(v)]), pP=P.map((v,i)=>[X(i),Y(v)]);
+  const dB=smooth(pB), dP=smooth(pP), close=` L${X(n-1)},${Y0} L${X(0)},${Y0} Z`;
+  let s=`<defs><linearGradient id="csG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".14"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient>
+    <pattern id="csH" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="9" fill="var(--coral)" opacity=".55"/></pattern>
+    <clipPath id="csC"><rect id="csR" x="0" y="0" width="${RM?W:0}" height="${H}"/></clipPath>
+    <mask id="csM"><rect width="${W}" height="${H}" fill="#fff"/><path d="${dB}${close}" fill="#000"/></mask></defs>`;
+  /* ---- panneau du haut : la cadence ---- */
+  s+=`<text class="pnl" x="${L}" y="${T-34}">CADENCE · commandes expédiées par quart d'heure</text>`;
   [0,100,200,300].forEach(v=>{ s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L-10}" y="${Y(v)+4}" text-anchor="end">${v}</text>`; });
-  for(let h=0;h<=12;h+=2) s+=`<text class="ax" x="${Xm(h*60)}" y="${Y(0)+22}" text-anchor="middle">${String(5+h).padStart(2,'0')}:00</text>`;
-  const dB=smooth(B), dP=smooth(P), base=` L${X(n-1)},${Y(0)} L${X(0)},${Y(0)} Z`;
-  // zone gagnée : sous la courbe du plan, au-dessus de celle de base
-  s+=`<g clip-path="url(#csC)"><path d="${dP}${base}" fill="url(#csG)"/>
-    <mask id="csM"><rect width="${W}" height="${H}" fill="#fff"/><path d="${dB}${base}" fill="#000"/></mask>
-    <path d="${dP}${base}" fill="url(#csH)" mask="url(#csM)"/>
+  for(let h=0;h<=12;h+=2) s+=`<text class="ax" x="${Xm(h*60)}" y="${Y0+20}" text-anchor="middle">${String(5+h).padStart(2,'0')}:00</text>`;
+  s+=`<g clip-path="url(#csC)"><path d="${dP}${close}" fill="url(#csG)"/>
+    <path d="${dP}${close}" class="win" mask="url(#csM)"/>
     <path class="curve cb" d="${dB}"/><path class="curve cp" id="csP" d="${dP}"/></g>`;
-  // les imprévus, épinglés sur la courbe
-  const EV=[[0,'3 intérimaires absents',-1],[150,'Chariot en panne',1,0,'end'],[180,'Camion fournisseur',-1],[240,'Préparateur absent',1,0,'end'],[270,'Vente flash',-1,0,'end'],[315,'Trieur en panne',1,1,'start'],[330,'Pharmacienne absente',-1,0,'start'],[405,'Chambre froide bloquée',1,0,'start'],[480,"Chef d'équipe malade",-1],[540,'Commande urgente',1,0,'start']];
+  /* accolade sur le gain de l'après-midi */
+  const bx0=X(33), bx1=X(38), by=Y(318);
+  s+=`<g class="lab" data-m="570" style="opacity:${RM?1:0}"><path class="brk" d="M${bx0} ${by+10} V${by} H${bx1} V${by+10}"/><text class="gain" x="${bx0}" y="${by-10}" text-anchor="start">+553 commandes expédiées en 2 h</text></g>`;
+  /* imprévus épinglés sur la courbe "sans rien changer" */
+  const EV=[[0,'3 intérimaires absents',-1],[150,'Chariot en panne',1,0,'end'],[180,'Camion fournisseur',-1],[240,'Préparateur absent',1,0,'end'],[270,'Vente flash',-1,0,'end'],[315,'Trieur en panne',1,1,'start'],[330,'Pharmacienne absente',-1,0,'start'],[405,'Chambre froide bloquée',1,0,'start'],[480,"Chef d'équipe malade",-1,0,'start'],[540,'Commande urgente',1,0,'start']];
   const at=m=>{ const f=m/15-.5, i=Math.max(0,Math.min(n-1,Math.floor(f))), j=Math.min(n-1,i+1), t=Math.max(0,Math.min(1,f-i)); return B[i]+(B[j]-B[i])*t; };
-  EV.forEach(([m,l,up,big,an],j)=>{ const x=Math.max(X(0),Xm(m)), y=Y(at(m)), ty=up<0? Math.min(y-44, T-6+(j%2)*0) : Y(0)+56+(j%2?20:0), anc=an||(j===0?'start':'middle');
-    s+=`<g class="pin${big?' big':''}" data-m="${m}" style="opacity:${RM?1:0}"><line x1="${x}" x2="${x}" y1="${up<0?ty+8:y+8}" y2="${up<0?y-8:ty-26}"/><circle cx="${x}" cy="${y}" r="6.5"/>
+  EV.forEach(([m,l,up,big,an],j)=>{ const x=Math.max(X(0),Xm(m)), y=Y(at(m)), ty=up<0? T-2 : Y0+50+(j%2?16:0), anc=an||(j===0?'start':'middle');
+    s+=`<g class="pin${big?' big':''}" data-m="${m}" style="opacity:${RM?1:0}"><line x1="${x}" x2="${x}" y1="${up<0?ty+8:y+8}" y2="${up<0?y-8:ty-26}"/><circle cx="${x}" cy="${y}" r="6"/>
       <text class="pt" x="${x}" y="${up<0?ty-16:ty-12}" text-anchor="${anc}">${clock(m,5)}</text><text class="pl" x="${x}" y="${up<0?ty:ty+4}" text-anchor="${anc}">${esc(l)}</text></g>`; });
-  // les cinq renforts, sur le rail du bas
-  const RF=[[45,'Assia'],[180,'Romane'],[285,'Naël'],[345,'Anis, Mohamed']], ry=Y(0)+118;
+  /* ---- panneau du bas : les retards qui se préparent ---- */
+  s+=`<text class="pnl" x="${L}" y="${LT-26}">RETARDS EN ROUTE · commandes déjà dans l'entrepôt qui rateront leur camion</text>`;
+  [0,500,1000].forEach(v=>{ s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${Yl(v)}" y2="${Yl(v)}"/><text class="ax" x="${L-10}" y="${Yl(v)+4}" text-anchor="end">${fr(v)}</text>`; });
+  for(let h=0;h<=12;h+=2) s+=`<text class="ax" x="${Xm(h*60)}" y="${LB+20}" text-anchor="middle">${String(5+h).padStart(2,'0')}:00</text>`;
+  const qB=DB.map((v,i)=>[Xd(i),Yl(v)]), qP=DP.map((v,i)=>[Xd(i),Yl(v)]);
+  const areaGap=line(qB)+'L'+qP.slice().reverse().map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join('L')+'Z';
+  s+=`<g clip-path="url(#csC)"><path d="${areaGap}" fill="url(#csH)"/><path d="${line(qP)} L${Xd(DP.length-1)},${LB} L${Xd(0)},${LB} Z" fill="var(--accent)" opacity=".18"/>
+    <path class="curve lb" d="${line(qB)}"/><path class="curve lp" d="${line(qP)}"/></g>`;
+  const xe=Xd(DB.length-1);
+  s+=`<g class="lab" data-m="330" style="opacity:${RM?1:0}"><circle cx="${Xd(22)}" cy="${Yl(311)}" r="5" class="dotb"/><text class="callb" x="${Xd(22)-10}" y="${Yl(311)-14}" text-anchor="end">10:30 · déjà 311 retards en route</text>
+    <text class="callp" x="${Xd(22)+10}" y="${Yl(0)-12}">avec le plan : 0</text></g>`;
+  s+=`<g class="lab" data-m="700" style="opacity:${RM?1:0}"><text class="endb" x="${xe+10}" y="${Yl(1248)+6}">1&#8201;248</text><text class="endp" x="${xe+10}" y="${Yl(330)+6}">330</text>
+    <path class="brk2" d="M${xe-6} ${Yl(1248)+4} H${xe-14} V${Yl(330)-4} H${xe-6}"/><text class="big918" x="${xe-26}" y="${(Yl(1248)+Yl(330))/2+12}" text-anchor="end">−918</text></g>`;
+  /* renforts */
+  const RF=[[45,'Assia'],[180,'Romane'],[285,'Naël'],[345,'Anis, Mohamed']], ry=LB+64;
   s+=`<line class="rail" x1="${L}" x2="${W-R}" y1="${ry}" y2="${ry}"/><text class="rft" x="${L}" y="${ry+24}">RENFORTS DU PLAN</text>`;
   RF.forEach(([m,l],k)=>{ const x=Xm(m); s+=`<g class="lab" data-m="${m}" style="opacity:${RM?1:0}"><path class="rf" d="M${x} ${ry-7} L${x+7} ${ry} L${x} ${ry+7} L${x-7} ${ry} Z"/><text class="rft" x="${x}" y="${k%2?ry+24:ry-14}" text-anchor="middle">${clock(m,5)} ${esc(l)}</text></g>`; });
-  s+=`<text class="gapt lab" data-m="600" x="${X(38)}" y="${Y(345)}" text-anchor="middle" style="opacity:${RM?1:0}">918 retards évités</text>`;
   s+=`<circle class="cart" id="csCart" r="9" cx="${X(0)}" cy="${Y(P[0])}" style="opacity:${RM?0:1}"/>`;
   svg.innerHTML=s;
   if(RM) return;
   const rect=$('#csR'), cart=$('#csCart'), path=$('#csP'), len=path.getTotalLength(), marks=[...svg.querySelectorAll('[data-m]')];
   new IntersectionObserver((es,o)=>es.forEach(e=>{ if(!e.isIntersecting) return; o.disconnect();
-    const t0=performance.now(), D=6200;
+    const t0=performance.now(), D=7000;
     (function tick(now){ const p=Math.min(1,(now-t0)/D), e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2, xr=L+(W-L-R)*e;
       rect.setAttribute('width',xr);
-      // le wagon suit la courbe du plan
       let lo=0, hi=len; for(let k=0;k<22;k++){ const mid=(lo+hi)/2; if(path.getPointAtLength(mid).x<xr) lo=mid; else hi=mid; }
       const pt=path.getPointAtLength(lo); cart.setAttribute('cx',pt.x); cart.setAttribute('cy',pt.y);
       marks.forEach(g=>{ if(Xm(+g.dataset.m)<=xr+4) g.style.opacity=1; });
-      if(p<1) requestAnimationFrame(tick); else cart.style.opacity=0; })(t0);
-  }),{threshold:.4}).observe(svg);
+      if(p<1) requestAnimationFrame(tick); else { cart.style.opacity=0; marks.forEach(g=>g.style.opacity=1); } })(t0);
+  }),{threshold:.25}).observe(svg);
 })();
 
 /* ================= ACCÈS ================= */
