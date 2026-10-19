@@ -311,6 +311,43 @@ h2{margin:0;font-weight:900;font-stretch:112%;font-size:clamp(32px,4.6vw,60px);l
 }
 @media (max-width:860px){ .cw-card{width:80%;left:1%} .feature.cw .cw-stage .browser{width:90%;margin-right:1%} .cw-stage .stage-in{padding-bottom:40%} }
 
+/* ---------- Feature: Pickwise (vert nuit d'entrepôt + jaune étiquette de rack) ---------- */
+.feature.pw{--pw-night:#05241a;--pw-night2:#0a3324;--pw-line:#174531;--pw-ink:#e7f1eb;--pw-mut:#9dbcac;--pw-mint:#7fd1a2;--pw-label:#f4c21a;
+  background:var(--pw-night);color:var(--pw-ink);margin-top:clamp(28px,4vw,48px)}
+.feature.pw .lbl{color:var(--pw-mint)}
+.feature.pw .lbl b{color:var(--pw-ink)}
+.feature.pw h2{color:var(--pw-ink);display:flex;align-items:center;gap:.3em}
+.feature.pw h2 .tag{display:inline-grid;place-items:center;font:700 .3em/1 var(--mono);letter-spacing:.06em;color:#1c1704;background:var(--pw-label);border-radius:3px;padding:.45em .6em;transform:rotate(-3deg);transition:transform .6s var(--ease)}
+.feature.pw:hover h2 .tag{transform:rotate(2deg) translateY(-2px)}
+.feature.pw p.pitch{color:color-mix(in srgb,var(--pw-ink) 82%,transparent)}
+.feature.pw p.pitch q{color:var(--pw-ink)}
+.feature.pw .wn-facts{background:color-mix(in srgb,var(--pw-ink) 16%,transparent)}
+.feature.pw .wn-facts div{background:var(--pw-night);align-content:start}
+.feature.pw .wn-facts div:hover{background:var(--pw-night2)}
+.feature.pw .wn-facts strong{color:var(--pw-ink);font-variant-numeric:tabular-nums}
+.feature.pw .wn-facts strong em{font-style:normal;color:var(--pw-label)}
+.feature.pw .wn-facts span{color:color-mix(in srgb,var(--pw-ink) 70%,transparent)}
+.feature.pw .ctas .btn{border-color:var(--pw-ink);color:var(--pw-ink)}
+.feature.pw .ctas .btn::before{background:var(--pw-ink)}
+.feature.pw .ctas .btn.primary{background:var(--pw-label);border-color:var(--pw-label);color:#1c1704}
+.feature.pw .ctas .btn:hover{color:var(--pw-night);border-color:var(--pw-ink)}
+.feature.pw .browser{background:#0a3324;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.feature.pw .browser .bar{background:#0e3b2a}
+.feature.pw .browser .bar i{background:#2a5a45}
+.feature.pw .browser .bar span{background:#05241a;color:#9dbcac}
+.feature.pw .browser img{aspect-ratio:1440/900}
+.feature.pw .phone{border-color:#021710;background:#021710;box-shadow:0 22px 50px rgba(0,0,0,.6)}
+.feature.pw .phone.p2{right:-2%;bottom:3%}
+.feature.pw .stage figcaption{color:color-mix(in srgb,var(--pw-ink) 55%,transparent)}
+.racks{position:absolute;left:0;right:0;bottom:0;height:clamp(30px,3.6vw,46px);z-index:-1;pointer-events:none;display:flex;gap:3px;align-items:flex-end;padding-inline:2px;opacity:.9}
+.racks i{flex:1;height:var(--h);background:#174531;border-radius:2px 2px 0 0}
+.racks i.on{background:#7fd1a2;opacity:.55}
+.racks i.lb{background:#f4c21a;opacity:1}
+@media (prefers-reduced-motion:no-preference){
+  .racks i.lb{animation:rackpulse 2.4s ease-in-out infinite}
+  @keyframes rackpulse{50%{opacity:.35}}
+}
+
 /* ---------- Cursor (desktop only) ---------- */
 .cur{position:fixed;left:0;top:0;z-index:100;pointer-events:none;display:none}
 .cur .ring{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid var(--ink);border-radius:50%;transition:width .35s var(--ease),height .35s var(--ease),margin .35s var(--ease),background .35s,border-color .35s;display:grid;place-items:center}
@@ -653,10 +690,11 @@ html.ld .loader.out{transform:translateY(-100%)}
   <nav aria-label="Sections">
     <a href="#winn3oum"><sup>00</sup>Win N3oum</a>
     <a href="#crewline"><sup>01</sup>Crewline</a>
-    <a href="#parcours"><sup>02</sup>Parcours</a>
-    <a href="#projets"><sup>03</sup>Projets</a>
-    <a href="#outils"><sup>04</sup>Méthodes</a>
-    <a href="#contact"><sup>05</sup>Contact</a>
+    <a href="#pickwise"><sup>02</sup>Pickwise</a>
+    <a href="#parcours"><sup>03</sup>Parcours</a>
+    <a href="#projets"><sup>04</sup>Projets</a>
+    <a href="#outils"><sup>05</sup>Méthodes</a>
+    <a href="#contact"><sup>06</sup>Contact</a>
   </nav>
 </div><div class="progress" id="progress"></div></header>
 
@@ -775,6 +813,34 @@ html.ld .loader.out{transform:translateY(-100%)}
     </div>
   </section>
 
+  <section id="pickwise" class="feature pw rv" aria-label="Pickwise, outil créé chez Casino">
+    <div>
+      <span class="lbl"><b>Outil métier</b> · créé chez Casino · démo en ligne</span>
+      <h2>Pickwise <span class="tag" aria-hidden="true">01A640050B</span></h2>
+      <p class="pitch">Chaque nouvel article doit trouver sa place dans le picking, et la décision changeait d'une personne à l'autre. J'ai créé Pickwise : il lit tous les emplacements, repère où vivent les articles qui ressemblent au nouveau et propose une adresse, <q>avec sa raison écrite</q>. Rien ne part au terrain sans contrôle.</p>
+      <div class="wn-facts">
+        <div><strong>14 751</strong><span>emplacements lus en un seul calcul, sur un picking de 66 allées</span></div>
+        <div><strong>46 <em>/</em> 46</strong><span>champs du classeur Excel d'origine reproduits à l'identique</span></div>
+        <div><strong>1 raison</strong><span>écrite pour chaque adresse proposée, et des contrôles avant tout mouvement</span></div>
+        <div><strong>5 démos</strong><span>grande distribution, e-commerce, pièces détachées, pharmacie, entrepôt neuf</span></div>
+      </div>
+      <div class="ctas">
+        <a class="btn primary mag" href="pickwise/PICKWISE.html" target="_blank" rel="noopener" data-cur="link">Ouvrir la démo <span class="arr">↗</span></a>
+        <a class="btn mag" href="pickwise/" target="_blank" rel="noopener" data-cur="link">Voir le site <span class="arr">↗</span></a>
+      </div>
+    </div>
+    <figure class="stage">
+      <div class="stage-in">
+        <div class="browser"><div class="bar"><i></i><i></i><i></i><span>gaythmejai.com/pickwise</span></div><img src="images/pickwise-site.webp" alt="Le site de Pickwise : le plan d'un picking de 14 751 emplacements, chaque point est un emplacement" width="1440" height="900" loading="lazy"></div>
+        <div class="phone p1"><img src="images/pickwise-app-1.webp" alt="La démo Pickwise sur téléphone : propositions d'adresse en cartes" width="780" height="1688" loading="lazy"></div>
+        <div class="phone p2"><img src="images/pickwise-app-2.webp" alt="La démo Pickwise sur téléphone : contrôles et blocages" width="780" height="1688" loading="lazy"></div>
+      </div>
+      <figcaption>Captures du site et de la démo, données de démonstration fictives</figcaption>
+    </figure>
+    <div class="racks" aria-hidden="true"><i style="--h:64%"></i><i style="--h:78%"></i><i style="--h:38%"></i><i class="on" style="--h:38%"></i><i style="--h:38%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:78%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:78%"></i><i class="on" style="--h:90%"></i><i style="--h:52%"></i><i style="--h:90%"></i><i class="on" style="--h:90%"></i><i style="--h:38%"></i><i class="on" style="--h:38%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:90%"></i><i class="on" style="--h:100%"></i><i class="on" style="--h:90%"></i><i class="on" style="--h:52%"></i><i style="--h:90%"></i><i class="on" style="--h:90%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:90%"></i><i class="on" style="--h:64%"></i><i class="on" style="--h:78%"></i><i style="--h:52%"></i><i style="--h:100%"></i><i class="on" style="--h:38%"></i><i class="on" style="--h:90%"></i><i style="--h:64%"></i><i class="on" style="--h:64%"></i><i class="on" style="--h:38%"></i><i class="on" style="--h:78%"></i><i class="on" style="--h:64%"></i><i class="on" style="--h:78%"></i><i class="on" style="--h:100%"></i><i class="on" style="--h:90%"></i><i class="on" style="--h:64%"></i><i class="on" style="--h:64%"></i><i class="lb" style="--h:100%"></i><i style="--h:38%"></i><i class="on" style="--h:64%"></i><i class="on" style="--h:100%"></i><i style="--h:100%"></i><i class="on" style="--h:100%"></i><i style="--h:100%"></i><i style="--h:64%"></i><i class="on" style="--h:100%"></i><i class="on" style="--h:78%"></i><i class="on" style="--h:90%"></i><i class="on" style="--h:38%"></i><i class="on" style="--h:64%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:78%"></i><i class="on" style="--h:78%"></i><i style="--h:64%"></i><i style="--h:78%"></i><i style="--h:64%"></i><i style="--h:64%"></i><i style="--h:78%"></i><i class="on" style="--h:52%"></i><i class="on" style="--h:52%"></i></div>
+  </section>
+
+
   <div class="band" aria-hidden="true">
     <div class="track" id="track">
       <span>Kaizen</span><span class="o">VSM</span><span>5S</span><span class="o">SMED</span><span>AMDEC</span><span class="o">PDCA</span><span>Ishikawa</span><span class="o">Six Sigma</span><span>QCD</span>
@@ -818,7 +884,7 @@ html.ld .loader.out{transform:translateY(-100%)}
         <button type="button" aria-expanded="false" aria-controls="p0"><span class="code">PRJ/04</span><span class="name">Pickwise</span><span class="org">Casino Group</span><span class="year"><span class="y1">2025–2026</span><span class="y2">Outil créé</span></span><span class="plus" aria-hidden="true">+</span></button>
         <div class="detail" id="p0"><div><div class="case">
           <div><h4>Contexte</h4><p>Les décisions d'implantation en entrepôt prenaient du temps et variaient d'une personne à l'autre.</p></div>
-          <div><h4>Ce que j'ai créé</h4><ul><li>Un outil d'aide à la décision pour les implantations</li><li>Les règles métier et les contraintes opérationnelles intégrées dans l'outil</li></ul></div>
+          <div><h4>Ce que j'ai créé</h4><ul><li>Un outil d'aide à la décision pour les implantations</li><li>Les règles métier et les contraintes opérationnelles intégrées dans l'outil</li></ul><p style="margin-top:10px"><a href="pickwise/" target="_blank" rel="noopener" data-cur="link" style="color:var(--blue);border-bottom:1px solid currentColor">Voir Pickwise et sa démo ↗</a></p></div>
           <div class="res"><h4>Résultats</h4><ul><li>Des décisions d'implantation <strong>standardisées</strong> et plus rapides</li></ul></div>
         </div></div></div>
       </li>

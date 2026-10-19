@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PickWise</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="PickWise s'adapte à n'importe quel entrepôt : il lit tous les emplacements, trouve où vivent les articles qui ressemblent au tien et propose une adresse de picking cohérente, avec sa raison et ses contrôles.">
+<meta name="theme-color" content="#05241a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout : bandes pleine largeur alternant « nuit d'entrepôt » (hero, moteur) et papier (preuves, cockpit, accès).
+   Le hero est le vrai plan du picking (14 751 emplacements) dessiné sur canvas ; l'étiquette jaune de rack sert d'accent unique. */
+:root{
+  /* bandes nuit : identiques dans les deux thèmes */
+  --night:#05241a; --night-2:#0a3324; --night-line:#174531; --night-ink:#e7f1eb; --night-muted:#9dbcac; --mint:#7fd1a2;
+  /* papier */
+  --paper:#eef1ea; --surface:#ffffff; --sunk:#e5eae2; --ink:#0f2219; --muted:#4b5c52; --faint:#7d8c83; --line:#d2dad0;
+  --green:#006b38; --green-ink:#ffffff; --green-soft:#dcebe1;
+  --label:#f4c21a; --label-ink:#1c1704;
+  --ok:#137a4b; --ok-bg:#e1f2e8; --warn:#8d6a00; --warn-bg:#fbf0cc; --bad:#c3131b; --bad-bg:#fde5e6;
+  --heat0:#e3ebe2; --heat1:#a8d3b5; --heat2:#3f9364; --heat3:#0b5a33;
+  --display:"Big Shoulders Display","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --sans:"Schibsted Grotesk",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0b1712; --surface:#12211a; --sunk:#0e1b15; --ink:#e4ece6; --muted:#a3b4aa; --faint:#74867b; --line:#23362c;
+  --green:#5fc68e; --green-ink:#06160e; --green-soft:#16301f;
+  --ok:#62cf93; --ok-bg:#12301f; --warn:#e6b53f; --warn-bg:#33290c; --bad:#ff7a73; --bad-bg:#3a1414;
+  --heat0:#18271f; --heat1:#25523a; --heat2:#3f9364; --heat3:#8fe0b2;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0b1712; --surface:#12211a; --sunk:#0e1b15; --ink:#e4ece6; --muted:#a3b4aa; --faint:#74867b; --line:#23362c;
+  --green:#5fc68e; --green-ink:#06160e; --green-soft:#16301f;
+  --ok:#62cf93; --ok-bg:#12301f; --warn:#e6b53f; --warn-bg:#33290c; --bad:#ff7a73; --bad-bg:#3a1414;
+  --heat0:#18271f; --heat1:#25523a; --heat2:#3f9364; --heat3:#8fe0b2;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,p{margin:0}
+h1,h2{font-family:var(--display);text-wrap:balance;text-transform:uppercase;line-height:.88;letter-spacing:.005em}
+h2{font-size:clamp(40px,min(6.6vw,10svh),100px);font-weight:900;overflow-wrap:break-word}
+h3{font:700 21px/1.25 var(--sans);text-wrap:balance}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--label);outline-offset:3px;border-radius:4px}
+.mono{font-family:var(--mono)}
+.num{font-variant-numeric:tabular-nums}
+
+.band{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.in{max-width:1240px;margin:0 auto}
+.night{background:var(--night);color:var(--night-ink)}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font:500 12.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
+.night .eyebrow{color:var(--mint)}
+.eyebrow::before{content:"";width:22px;height:2px;background:currentColor}
+.lede{font-size:19px;color:var(--muted);max-width:60ch}
+.night .lede{color:var(--night-muted)}
+
+/* boutons */
+.btn{display:inline-flex;align-items:center;gap:12px;font:600 16px/1 var(--sans);padding:17px 22px;border-radius:999px;text-decoration:none;border:1.5px solid currentColor;cursor:pointer;background:transparent;color:inherit;transition:transform .18s cubic-bezier(.2,.7,.2,1),background .18s,color .18s}
+.btn:hover{transform:translateY(-2px)}
+.btn .arr{display:inline-block;transition:transform .18s}
+.btn:hover .arr{transform:translateX(4px)}
+.btn.label{background:var(--label);color:var(--label-ink);border-color:var(--label)}
+.btn.solid{background:var(--green);color:var(--green-ink);border-color:var(--green)}
+.btn.ghost-n{color:var(--night-ink);border-color:var(--night-line)}
+.btn.ghost-n:hover{border-color:var(--night-muted)}
+
+/* navigation */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--night)}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--night) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--night-ink);border-bottom:1px solid var(--night-line)}
+.nav .in{display:flex;align-items:center;gap:28px;height:64px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.sig{display:flex;gap:3px;align-items:flex-end;height:22px}
+.sig i{display:block;width:5px;background:var(--label);border-radius:1px}
+.sig i:nth-child(1){height:11px}.sig i:nth-child(2){height:22px}.sig i:nth-child(3){height:16px}
+.brand b{font:900 25px/1 var(--display);letter-spacing:.06em}
+.nav nav{display:flex;gap:26px;margin-left:auto;align-items:center;font-size:15px}
+.nav nav a{text-decoration:none;color:var(--night-muted);transition:color .15s}
+.nav nav a:hover{color:var(--night-ink)}
+.nav .btn{padding:11px 16px;font-size:14.5px}
+@media (max-width:880px){.nav nav a.hide-s{display:none}}
+
+/* hero */
+/* le premier écran tient en entier : titre, plan et boutons, dimensionnés sur la hauteur ET la largeur */
+.hero{padding-block:0;position:relative;overflow:hidden}
+/* écran 1 : le titre seul ; écran 2 : le plan, sa légende et les boutons */
+.hero-top{min-height:calc(100svh - 64px - env(safe-area-inset-top,0px));align-content:center;padding-block:clamp(24px,5svh,72px)}
+.hero-screen{min-height:calc(100svh - 64px - env(safe-area-inset-top,0px));display:flex;flex-direction:column;scroll-margin-top:64px}
+.cue{display:inline-block;margin-top:16px;color:var(--label);text-decoration:none;font-weight:700}
+.cue:hover{text-decoration:underline}
+.hero h1{font-size:clamp(40px,min(10.5vw,19svh),190px);overflow-wrap:break-word;font-weight:900;line-height:.84;letter-spacing:-.005em}
+/* police d'affichage indisponible (réseau lent, pare-feu) : taille réduite pour ne jamais couper un mot */
+.nofont .hero h1{font-size:clamp(32px,min(7vw,14svh),128px);letter-spacing:-.01em}
+.nofont h2{font-size:clamp(34px,min(5.2vw,8svh),80px)}
+.hero h1 .l1{display:block}
+.hero h1 .l2{display:block;color:var(--label)}
+.hero h1 .n{font-variant-numeric:tabular-nums}
+.hero-top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.hero-meta{font:500 12.5px/1.7 var(--mono);color:var(--night-muted);text-align:right;letter-spacing:.04em;padding-bottom:12px}
+.hero-meta b{color:var(--night-ink);font-weight:500}
+@media (max-width:760px){.hero-top{grid-template-columns:1fr}.hero-meta{text-align:left;padding:0}}
+.plan-wrap{position:relative;margin-top:0;flex:1 1 auto;min-height:200px;display:flex;flex-direction:column;border-top:1px solid var(--night-line);border-bottom:1px solid var(--night-line);background:linear-gradient(180deg,var(--night-2),var(--night))}
+.plan-wrap canvas{display:block;width:100%;flex:1 1 0;min-height:200px;height:auto}
+.hud{position:absolute;left:14px;top:14px;display:grid;gap:6px;max-width:min(440px,calc(100% - 28px));pointer-events:none}
+.hud .k{font:500 11.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mint)}
+.hud .t{font:600 15px/1.35 var(--sans);color:var(--night-ink);background:color-mix(in srgb,var(--night) 82%,transparent);padding:9px 12px;border-radius:8px;border:1px solid var(--night-line)}
+.hud .bar{display:flex;gap:4px}
+.hud .bar i{height:3px;width:34px;border-radius:2px;background:var(--night-line);transition:background .3s}
+.hud .bar i.on{background:var(--label)}
+.plan-tip{position:absolute;right:14px;bottom:30px;font:500 12px/1 var(--mono);color:var(--night-muted);background:color-mix(in srgb,var(--night) 80%,transparent);padding:7px 9px;border-radius:6px;pointer-events:none}
+.replay{position:absolute;right:14px;top:14px;font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--night-ink);background:var(--night);border:1px solid var(--night-line);border-radius:999px;padding:9px 13px;cursor:pointer}
+.replay:hover{border-color:var(--night-muted)}
+@media (max-width:600px){.hud{position:static;max-width:none;padding:12px 0 0;margin:0 16px}.replay{top:auto;bottom:34px;right:10px}.plan-tip{display:none}}
+.hero-bottom{display:grid;grid-template-columns:1.2fr 1fr;gap:clamp(16px,3svh,40px);padding-block:clamp(14px,2.6svh,36px) clamp(18px,3.4svh,64px);align-items:start}
+.hero-bottom .legend-n{margin-top:clamp(10px,1.8svh,22px)}
+@media (max-height:620px){.hero-top,.hero-screen{min-height:0}.plan-wrap,.plan-wrap canvas{min-height:240px}}
+@media (max-width:600px){.hero h1{font-size:clamp(36px,min(12.8vw,13svh),110px)}.hero-meta{font-size:12px;line-height:1.6}.plan-wrap,.plan-wrap canvas{min-height:260px}.hud{padding-top:10px}.hero-bottom{padding-block:16px 20px;gap:16px}.hero-bottom .lede{font-size:16.5px;line-height:1.5}.ctas .btn{padding:14px 18px;font-size:15px}.replay{top:10px;bottom:auto;left:10px;right:auto;padding:7px 10px;font-size:11.5px}.hud .t{font-size:14px}}
+.hero-bottom .lede{font-size:20px;color:var(--night-ink)}
+.hero-bottom .lede span{color:var(--night-muted)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end}
+.legend-n{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;font:500 12.5px/1 var(--mono);color:var(--night-muted)}
+.legend-n span{display:inline-flex;align-items:center;gap:7px}
+.legend-n i{width:10px;height:10px;border-radius:2px;display:inline-block}
+@media (max-width:860px){.hero-bottom{grid-template-columns:1fr;gap:26px}.ctas{justify-content:flex-start}}
+
+/* portabilité */
+.port{padding-block:110px}
+.port-head{display:grid;gap:22px;max-width:920px;margin-bottom:56px}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:2px solid var(--ink)}
+.pc{padding:26px 26px 30px 0;display:grid;gap:14px;align-content:start;min-width:0}
+.pc+.pc{padding-left:26px;border-left:1px solid var(--line)}
+.pk{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
+.pc h3{font:800 clamp(28px,3vw,40px)/.95 var(--display);text-transform:uppercase}
+.pc ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.pc li{color:var(--muted);font-size:15.5px;padding-left:20px;position:relative}
+.pc li::before{content:"";position:absolute;left:0;top:.62em;width:9px;height:9px;background:var(--label);border-radius:2px}
+.pc li b{color:var(--ink);font-weight:600}
+.sites{display:flex;flex-wrap:wrap;gap:10px;margin-top:40px}
+.sites span{font:500 14px/1 var(--mono);padding:12px 16px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted)}
+@media (max-width:860px){.pgrid{grid-template-columns:1fr}.pc,.pc+.pc{padding:24px 0;border-left:0;border-bottom:1px solid var(--line)}}
+.facts{border-top:1px solid var(--line)}
+.pgrid.four{grid-template-columns:repeat(4,1fr)}
+.pgrid.four .pc h3{font-size:clamp(26px,2.4vw,36px);min-width:0;overflow-wrap:anywhere}
+.nofont .pgrid.four .pc h3{font-size:clamp(20px,1.8vw,26px)}
+@media (max-width:1000px){.pgrid.four{grid-template-columns:1fr 1fr}.pgrid.four .pc:nth-child(3){padding-left:0;border-left:0}}
+@media (max-width:620px){.pgrid.four{grid-template-columns:1fr}.pgrid.four .pc,.pgrid.four .pc+.pc{padding:24px 0;border-left:0;border-bottom:1px solid var(--line)}}
+@media (max-width:620px){.fact b{font-size:clamp(34px,10.5vw,60px)}}
+
+/* chiffres */
+.facts{padding-block:96px}
+.facts-head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:56px}
+@media (max-width:860px){.facts-head{grid-template-columns:1fr;gap:20px}}
+.fgrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.fact{padding:22px 18px 26px 0;border-bottom:1px solid var(--line);display:grid;gap:10px;align-content:start;min-width:0}
+.fact + .fact{padding-left:18px;border-left:1px solid var(--line)}
+.fact:nth-child(4n+1){padding-left:0;border-left:0}
+.fact b{white-space:nowrap;font:900 clamp(40px,5vw,80px)/.86 var(--display);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fact b small{font-size:.5em;margin-left:2px}
+.fact span{color:var(--muted);font-size:15px;line-height:1.45}
+.fact.hl b{color:var(--bad)}
+@media (max-width:860px){.fgrid{grid-template-columns:1fr 1fr}.fact:nth-child(4n+1){padding-left:18px;border-left:1px solid var(--line)}.fact:nth-child(2n+1){padding-left:0;border-left:0}}
+.source{margin-top:18px;font:500 12.5px/1.6 var(--mono);color:var(--faint)}
+
+/* moteur */
+.engine{padding-block:110px}
+.engine-head{display:grid;gap:24px;max-width:900px;margin-bottom:64px}
+.eng{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:start}
+.eng-vis{position:sticky;top:96px;display:grid;gap:16px;min-width:0}
+.panel{background:var(--night-2);border:1px solid var(--night-line);border-radius:16px;padding:20px;min-width:0}
+.panel-h{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:12px}
+.panel-h b{font:600 15px/1.3 var(--sans)}
+.panel-h span{font:500 12px/1 var(--mono);color:var(--night-muted)}
+#dens{display:block;width:100%;height:auto;overflow:visible}
+.d-bar{fill:var(--night-line)}
+.d-bar.in-bloc{fill:#2d6b4b}
+.d-area{fill:var(--mint);fill-opacity:.14}
+.d-line{fill:none;stroke:var(--mint);stroke-width:2.2}
+.d-bloc{fill:var(--label);fill-opacity:.08;stroke:var(--label);stroke-dasharray:4 4;stroke-width:1.2}
+.d-axis{fill:var(--night-muted);font:500 11px var(--mono)}
+.d-axis.hot{fill:var(--label);font-weight:700}
+.d-note{fill:var(--label);font:600 11.5px var(--mono)}
+.d-grid{stroke:var(--night-line);stroke-width:1}
+.slider{display:flex;align-items:center;gap:14px;margin-top:12px;font:500 12.5px/1 var(--mono);color:var(--night-muted);flex-wrap:wrap}
+.slider input{flex:1;min-width:140px;accent-color:var(--label)}
+.slider output{color:var(--night-ink);min-width:7ch}
+.raw{font:400 13px/1.75 var(--mono);color:#5d8572;word-break:break-word}
+.raw span{transition:color .25s,background .25s;border-radius:3px;padding:1px 0}
+.raw span.on{color:var(--night-ink);background:color-mix(in srgb,var(--label) 22%,transparent)}
+.raw .sep{color:var(--night-line)}
+.steps{display:grid;gap:0;counter-reset:s}
+.step{display:grid;grid-template-columns:62px 1fr;gap:6px 18px;padding:30px 0;border-top:1px solid var(--night-line);cursor:pointer;opacity:.5;transition:opacity .3s}
+.step:last-child{border-bottom:1px solid var(--night-line)}
+.step.on{opacity:1}
+.step .n{font:900 44px/.9 var(--display);color:var(--night-line);transition:color .3s;grid-row:span 2}
+.step.on .n{color:var(--label)}
+.step h3{color:var(--night-ink)}
+.step p{color:var(--night-muted);font-size:16.5px}
+.step p b{color:var(--night-ink);font-weight:600}
+@media (max-width:960px){.eng{grid-template-columns:1fr;gap:36px}.eng-vis{position:static}}
+@media (hover:none){.step{opacity:1}}
+
+/* étiquette d'adresse décodée */
+.addr{grid-column:2;display:flex;flex-wrap:wrap;gap:4px;margin-top:14px}
+.addr div{display:grid;gap:7px;justify-items:start}
+.addr div b{font:700 clamp(26px,3.2vw,40px)/1 var(--mono);background:var(--label);color:var(--label-ink);padding:10px 10px 9px;border-radius:4px}
+.addr div span{font:500 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--night-muted)}
+
+/* garde-fous */
+.guards{padding-block:110px}
+.g-head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:60px}
+@media (max-width:860px){.g-head{grid-template-columns:1fr;gap:20px}}
+.glist{display:grid;border-top:2px solid var(--ink)}
+.g{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) auto;gap:26px;align-items:start;padding:30px 0;border-bottom:1px solid var(--line)}
+.g h3{font:800 clamp(28px,3.4vw,44px)/.95 var(--display);text-transform:uppercase;letter-spacing:.005em}
+.g p{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:7px;font:600 13.5px/1 var(--sans);padding:8px 12px;border-radius:999px;white-space:nowrap}
+.c-ok{background:var(--ok-bg);color:var(--ok)} .c-warn{background:var(--warn-bg);color:var(--warn)} .c-bad{background:var(--bad-bg);color:var(--bad)}
+@media (max-width:860px){.g{grid-template-columns:1fr;gap:12px}}
+
+/* journée */
+.day{padding-block:100px;border-top:1px solid var(--line)}
+.track{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:56px;position:relative}
+.track::before{content:"";position:absolute;left:0;right:0;top:15px;height:2px;background:var(--line)}
+.tk{position:relative;padding-right:22px;display:grid;gap:12px;align-content:start;min-width:0}
+.tk .dot{width:32px;height:32px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);display:grid;place-items:center;font:700 12px/1 var(--mono);position:relative}
+.tk p{color:var(--muted);font-size:15.5px}
+.tlo{display:flex;flex-wrap:wrap;gap:6px}
+.tlo span{font:600 11.5px/1 var(--mono);padding:6px 8px;border-radius:5px;background:var(--sunk);border:1px solid var(--line)}
+.tlo span.t0{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+.tlo span.t1{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+@media (max-width:900px){.track{grid-template-columns:1fr;gap:28px}.track::before{left:15px;right:auto;top:0;bottom:0;width:2px;height:auto}.tk{grid-template-columns:32px 1fr;gap:6px 18px;padding:0}.tk .dot{grid-row:span 3}}
+
+/* cockpit */
+.cockpit{padding-block:110px;border-top:1px solid var(--line)}
+.c-head{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:48px}
+@media (max-width:860px){.c-head{grid-template-columns:1fr;gap:20px}}
+.win{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 40px 80px -50px rgba(5,36,26,.55)}
+.win-top{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--sunk);flex-wrap:wrap}
+.win-top .dots{display:flex;gap:6px}
+.win-top .dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.tabs button{font:600 13.5px/1 var(--sans);padding:9px 13px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.win-body{display:grid;grid-template-columns:200px 1fr;min-height:430px}
+.side{border-right:1px solid var(--line);padding:18px 14px;display:grid;gap:18px;align-content:start;font-size:14px}
+.side .grp{display:grid;gap:4px}
+.side .grp span{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:0 8px 4px}
+.side .grp div{padding:7px 8px;border-radius:7px;color:var(--muted)}
+.side .grp div.on{background:var(--green-soft);color:var(--ink);font-weight:600}
+.pane{padding:18px;min-width:0}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.filters button{font:600 13px/1 var(--sans);padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.filters button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink)}
+.filters b{font-variant-numeric:tabular-nums;margin-left:4px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+th{text-align:left;font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding:10px 10px;border-bottom:1px solid var(--line)}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td .lib{font-weight:600}
+td .ref{font:500 12px/1.4 var(--mono);color:var(--faint)}
+td .ad{font:700 14px/1 var(--mono);background:var(--label);color:var(--label-ink);padding:5px 7px;border-radius:3px;display:inline-block}
+td .ad.none{background:transparent;color:var(--faint);padding-left:0}
+td .ty{font:500 11.5px/1 var(--mono);color:var(--muted);margin-left:6px}
+td.why{color:var(--muted);max-width:300px}
+.cf{letter-spacing:2px;white-space:nowrap}
+.heatbox{display:grid;gap:12px}
+#heat{display:block;width:100%;height:auto;image-rendering:pixelated;border-radius:6px;cursor:crosshair}
+.heat-info{font:500 13px/1.4 var(--mono);color:var(--muted);min-height:1.4em}
+.ramp{display:flex;align-items:center;gap:8px;font:500 12px/1 var(--mono);color:var(--faint);flex-wrap:wrap}
+.ramp i{display:inline-block;width:20px;height:10px;border-radius:2px}
+.demo-tag{font:500 12px/1.5 var(--mono);color:var(--faint);margin-top:14px}
+@media (max-width:760px){.win-body{grid-template-columns:1fr}.side{display:none}}
+.feat{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:48px;border-top:1px solid var(--line)}
+.feat div{padding:22px 20px 4px 0;display:grid;gap:8px;align-content:start;min-width:0}
+.feat div+div{padding-left:20px;border-left:1px solid var(--line)}
+.feat p{color:var(--muted);font-size:15.5px}
+@media (max-width:860px){.feat{grid-template-columns:1fr 1fr}.feat div:nth-child(3){padding-left:0;border-left:0}}
+@media (max-width:520px){.feat{grid-template-columns:1fr}.feat div{padding-left:0!important;border-left:0!important;border-bottom:1px solid var(--line);padding-bottom:18px}}
+
+/* pour qui */
+.who{padding-block:100px;border-top:1px solid var(--line)}
+.wgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+.w{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;display:grid;gap:12px;align-content:start;min-width:0}
+.w .k{font:900 64px/.8 var(--display);color:var(--green)}
+.w p{color:var(--muted);font-size:15.5px}
+@media (max-width:860px){.wgrid{grid-template-columns:1fr}}
+
+/* accès */
+.access{padding-block:110px}
+.agrid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-top:56px}
+.a{border:1px solid var(--night-line);border-radius:18px;padding:28px;display:grid;gap:16px;align-content:start;min-width:0;background:var(--night-2)}
+.a.main{background:var(--label);color:var(--label-ink);border-color:var(--label)}
+.a .k{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mint)}
+.a.main .k{color:var(--label-ink);opacity:.7}
+.a h3{font:900 44px/.9 var(--display);text-transform:uppercase}
+.a p,.a li{color:var(--night-muted);font-size:15.5px}
+.a.main p,.a.main li{color:var(--label-ink)}
+.a ol,.a ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.a code{font:500 13px/1 var(--mono);background:color-mix(in srgb,var(--night-ink) 10%,transparent);padding:2px 5px;border-radius:4px;color:var(--night-ink)}
+.a .btn{justify-content:center;margin-top:6px}
+.a.main .btn{background:var(--label-ink);color:var(--label);border-color:var(--label-ink)}
+.a .file{font:500 12.5px/1.4 var(--mono);opacity:.7;overflow-wrap:anywhere}
+.a .mail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--night);border:1px solid var(--night-line);border-radius:10px;padding:10px 12px}
+.a .mail span{font-size:14px;color:var(--night-ink);word-break:break-all;flex:1;min-width:0;user-select:all}
+.copy{font:600 12.5px/1 var(--sans);padding:8px 11px;border-radius:999px;border:1px solid var(--night-line);background:transparent;color:var(--night-ink);cursor:pointer}
+.copy:hover{border-color:var(--night-muted)}
+@media (max-width:960px){.agrid{grid-template-columns:1fr}}
+
+/* faq */
+.faq{padding-block:100px}
+.fq{display:grid;grid-template-columns:1fr 1.4fr;gap:48px;align-items:start}
+@media (max-width:860px){.fq{grid-template-columns:1fr;gap:28px}}
+details{border-top:1px solid var(--line)}
+details:last-child{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;list-style:none;padding:22px 0;font-weight:600;font-size:18px;display:flex;justify-content:space-between;gap:18px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:400 26px/.8 var(--mono);color:var(--faint);transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{padding:0 0 24px;color:var(--muted);max-width:66ch}
+
+/* fin */
+.end{padding-block:120px 0}
+.end h2{font-size:clamp(60px,12vw,180px)}
+.end h2 span{color:var(--label)}
+.end-row{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap;margin-top:40px;padding-bottom:80px}
+footer{border-top:1px solid var(--night-line);padding-block:26px 34px;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;font-size:14px;color:var(--night-muted)}
+footer nav{display:flex;gap:22px;flex-wrap:wrap}
+footer a{text-decoration:none}
+footer a:hover{color:var(--night-ink)}
+
+/* apparition : depuis un état visible */
+.rv{transition:transform .8s cubic-bezier(.2,.7,.2,1),opacity .8s}
+.js .rv.pre{transform:translateY(18px);opacity:.35}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}.js .rv.pre{transform:none;opacity:1}}
+</style>
+
+</head>
+<body>
+<header class="nav band">
+  <div class="in">
+    <a class="brand" href="#top" aria-label="PickWise, haut de page"><span class="sig" aria-hidden="true"><i></i><i></i><i></i></span><b>PICKWISE</b></a>
+    <nav aria-label="Sections">
+      <a class="hide-s" href="#ton-entrepot">Ton entrepôt</a>
+      <a class="hide-s" href="#moteur">Le moteur</a>
+      <a class="hide-s" href="#au-dela">Stock en place</a>
+      <a class="hide-s" href="#cockpit">Cockpit</a>
+      <a class="hide-s" href="#questions">Questions</a>
+      <a class="btn label js-app" href="PICKWISE.html">Ouvrir la démo <span class="arr" aria-hidden="true">→</span></a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="night band hero" aria-labelledby="h1">
+    <div class="in hero-top">
+      <h1 id="h1"><span class="l1">Des milliers d'emplacements.</span><span class="l2">Un seul est le bon.</span></h1>
+      <p class="hero-meta">Exemple sur un vrai picking<br><b>66 allées · 14 751 emplacements</b><br>le tien a sa propre carte<br><a class="cue" href="#plan-ecran">↓ Voir le plan</a></p>
+    </div>
+    <div class="hero-screen" id="plan-ecran">
+    <div class="plan-wrap">
+      <canvas id="plan" aria-label="Plan du picking : chaque point est un emplacement. L'animation montre PickWise chercher l'adresse d'un article."></canvas>
+      <div class="hud" aria-live="polite">
+        <span class="k" id="hud-k">Étape 1 / 4</span>
+        <span class="t" id="hud-t">Lecture du plan : 14 751 emplacements, 66 allées. Exemple réel.</span>
+        <span class="bar" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+      </div>
+      <button class="replay" id="replay" type="button">↻ Rejouer</button>
+      <span class="plan-tip" id="plan-tip">Survole le plan</span>
+    </div>
+    <div class="in hero-bottom">
+      <div>
+        <p class="lede">Décris ton entrepôt ou branche ses exports. PickWise lit chaque emplacement, trouve où vivent les articles qui ressemblent au nouveau, et le place juste à côté. <span>Chaque adresse arrive avec sa raison écrite. Rien ne part au terrain sans contrôle.</span></p>
+        <div class="legend-n" aria-hidden="true">
+          <span><i style="background:var(--mint);opacity:.6"></i>occupé</span>
+          <span><i style="background:var(--night-line)"></i>libre</span>
+          <span><i style="background:#e05252"></i>hors gabarit</span>
+          <span><i style="background:var(--label)"></i>famille de l'article</span>
+        </div>
+      </div>
+      <div class="ctas">
+        <a class="btn label js-app" href="PICKWISE.html">Ouvrir la démo <span class="arr" aria-hidden="true">→</span></a>
+        <a class="btn ghost-n" href="#moteur">Voir comment il choisit</a>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- PORTABILITÉ -->
+  <section class="band port" id="ton-entrepot" aria-labelledby="h-port">
+    <div class="in">
+      <div class="port-head rv">
+        <span class="eyebrow">Ton entrepôt</span>
+        <h2 id="h-port">Il apprend ton entrepôt. Pas l'inverse.</h2>
+        <p class="lede">PickWise ne vient pas avec un plan figé. Tu décris ton entrepôt en quelques écrans, ou tu charges tes exports, et le moteur s'adapte à ton plan, à tes emplacements et à tes règles. Sans toucher au code.</p>
+      </div>
+      <div class="pgrid">
+        <div class="pc rv"><span class="pk">Ce qu'il lit</span><h3>Décris-le ou importe-le</h3><ul><li><b>Un assistant en 7 étapes</b> : métier, plan, emplacements, classement, règles, objectifs, données</li><li><b>Ton plan</b> : allées, travées, niveaux, simple ou double face, transversales, cotes en mètres, ou coordonnées X/Y</li><li><b>Tes fichiers</b> : un modèle Excel en français ou en anglais, ou ton export WMS, colonnes associées une fois et bilan avant chargement</li></ul></div>
+        <div class="pc rv"><span class="pk">Ce que tu règles</span><h3>Ton site, tes règles</h3><ul><li><b>Tes types d'emplacement</b>, avec dimensions de case et poids maxi : la capacité se calcule dans la meilleure orientation</li><li><b>Tes règles en phrases</b> : « si poids &gt; 12 kg, niveaux 1-2 obligatoires », « allée 10 réservée aux parfums »</li><li><b>Tes objectifs</b> : regrouper les familles, réduire la marche, limiter les réappros</li><li><b>Ton stock</b> : réserve, unités et lots séparés du picking</li></ul></div>
+        <div class="pc rv"><span class="pk">Ce qui ne change pas</span><h3>Le moteur et ses garde-fous</h3><ul><li>Densité par noyau gaussien sur l'ordre de préparation</li><li>Mailles adaptatives : famille, catégorie, unité de besoin</li><li>Score d'affinité et indice physique</li><li>Poids d'affinité appris sur ton entrepôt</li><li>Contrôles avant mouvement, raison écrite pour chaque adresse</li></ul></div>
+      </div>
+      <div class="sites rv" aria-label="Exemples de sites">
+        <span>Entrepôt de grande distribution</span><span>Plateforme e-commerce</span><span>Pièces détachées</span><span>Pharmacie</span><span>Prestataire logistique</span><span>Drive et dark store</span><span>Entrepôt neuf</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHIFFRES -->
+  <section class="band facts" aria-labelledby="h-facts">
+    <div class="in">
+      <div class="facts-head rv">
+        <h2 id="h-facts">Éprouvé à l'échelle réelle</h2>
+        <p class="lede">Un humain connaît ses allées. PickWise les connaît toutes en même temps, avec chaque famille, chaque gabarit et chaque place libre. Voici ce qu'il a lu en un seul calcul, sur son premier terrain : le picking d'un entrepôt de grande distribution.</p>
+      </div>
+      <div class="fgrid rv">
+        <div class="fact"><b class="num" data-count="131477">131 477</b><span>lignes de base lues et rapprochées</span></div>
+        <div class="fact"><b class="num" data-count="11094">11 094</b><span>articles en place dans le picking</span></div>
+        <div class="fact"><b class="num" data-count="173">173</b><span>familles, 22 rayons, 834 fournisseurs</span></div>
+        <div class="fact"><b class="num" data-count="66">66</b><span>allées sur 4 chemins de préparation</span></div>
+        <div class="fact"><b class="num">76,3<small>%</small></b><span>d'occupation utile, places neutralisées exclues</span></div>
+        <div class="fact hl"><b class="num" data-count="16">16</b><span>allées au-dessus du seuil de 95 %</span></div>
+        <div class="fact"><b class="num" data-count="3443">3 443</b><span>places libres, parmi lesquelles choisir la bonne</span></div>
+        <div class="fact"><b class="num" data-count="216">216</b><span>places hors gabarit, jamais proposées</span></div>
+      </div>
+      <p class="source">Premier terrain, base du 01/09/2026 : 4 chemins de préparation, 7 676 emplacements standard et 6 798 emplacements dynamiques. Ton entrepôt aura d'autres chiffres, le moteur reste le même.</p>
+    </div>
+  </section>
+
+  <!-- MOTEUR -->
+  <section class="night band engine" id="moteur" aria-labelledby="h-eng">
+    <div class="in">
+      <div class="engine-head rv">
+        <span class="eyebrow">Le moteur, sur un vrai cas</span>
+        <h2 id="h-eng">Fanta orange 6×33 cl. Où le mettre ?</h2>
+        <p class="lede">Voici ce que PickWise a écrit pour cet article, mot pour mot, dans la colonne Détails. Six raisonnements, une adresse.</p>
+      </div>
+      <div class="eng">
+        <div class="eng-vis">
+          <div class="panel">
+            <div class="panel-h"><b>Famille 201 · Limonades sodas, références par allée</b><span>allées 45 → 70</span></div>
+            <svg id="dens" viewBox="0 0 560 250" role="img" aria-label="Nombre de références de la famille 201 par allée, avec courbe de densité lissée. Le bloc 64 à 66 est encadré."></svg>
+            <label class="slider" for="bw">Largeur du noyau <input id="bw" type="range" min="0.4" max="4" step="0.1" value="1.2"><output id="bw-o" for="bw">1,2 allée</output></label>
+          </div>
+          <div class="panel">
+            <div class="panel-h"><b>Colonne Détails, telle que sortie du moteur</b><span>01A640050B</span></div>
+            <p class="raw" id="raw">
+<span data-s="1">regle famille : conditionnement = BOITE (BOITE) -&gt; allees 64,65,66</span> <span class="sep">|</span> <span data-s="1">liquide : maintenu a partir de l'allee 50</span> <span class="sep">|</span> <span data-s="2">22 ref. de la famille a proximite</span> <span class="sep">|</span> <span data-s="2">famille en 4 blocs, principal 55 % : 260 ref. vers l'allee 51 / 204 ref. vers l'allee 66 / 9 ref. vers l'allee 48</span> <span class="sep">|</span> <span data-s="4">score 19,10 (maille adaptative unite de besoin globale (115 refs, 100 % dans bloc 64,65,66) + affinite)</span> <span class="sep">|</span> <span data-s="3">bloc adaptatif 64,65,66 : unite de besoin globale, 115 refs, purete 100 %</span> <span class="sep">|</span> <span data-s="3">allee dominante 65 (41 % du bloc)</span> <span class="sep">|</span> <span data-s="3">micro-indice categorie + unite de besoin + meme type : 3 refs, 100 % dans 64,65,66</span> <span class="sep">|</span> <span data-s="3">repere famille 64,65,66 : 154 refs, purete 100 %</span> <span class="sep">|</span> <span data-s="4">indice physique 1,17 (poids + volume + hauteur vs comparables)</span> <span class="sep">|</span> <span data-s="6">allee 64</span> <span class="sep">|</span> <span data-s="5">conditionnement : 13 - BOITE METAL</span> <span class="sep">|</span> <span data-s="5">travee compatible 100x120</span></p>
+          </div>
+        </div>
+        <ol class="steps" id="steps" style="list-style:none;margin:0;padding:0">
+          <li class="step on" data-s="1"><span class="n">01</span><h3>La règle du métier passe d'abord</h3><p>Sur ce site, le conditionnement <b>boîte</b> envoie la famille vers les <b>allées 64, 65 et 66</b>, et les liquides restent à partir de l'allée 50. Ces règles se déclarent par entrepôt. Le moteur ne cherche jamais en dehors de ce que le terrain a décidé.</p></li>
+          <li class="step" data-s="2"><span class="n">02</span><h3>Il regarde où vit déjà la famille</h3><p>Les limonades sont éclatées en <b>4 blocs</b> dans l'entrepôt, le principal en tient 55 %. PickWise compte <b>22 références sœurs</b> à proximité de la zone visée.</p></li>
+          <li class="step" data-s="3"><span class="n">03</span><h3>Il mesure la densité</h3><p>Un <b>noyau gaussien</b> repère où les références comparables se tassent. Ici : 115 références de la même unité de besoin, <b>100 % dans le bloc 64·65·66</b>, allée dominante 65. Fais glisser le noyau pour voir la courbe changer.</p></li>
+          <li class="step" data-s="4"><span class="n">04</span><h3>L'affinité départage</h3><p>Entre les places assez denses, il compare univers, rayon, famille, sous-famille, catégorie, unité de besoin, fournisseur, poids, volume et hauteur. <b>Score 19,10</b>, indice physique 1,17. L'affinité affine, elle ne renverse jamais la densité de la famille.</p></li>
+          <li class="step" data-s="5"><span class="n">05</span><h3>Le physique doit suivre</h3><p>Boîte métal, <b>travée compatible 100×120</b>, place libre. Pendant le calcul, la place et la plage contiguë sont réservées : aucun autre article ne peut la prendre.</p></li>
+          <li class="step" data-s="6"><span class="n">06</span><h3>Une adresse, et sa raison</h3><p>Emplacement <b>standard</b> plutôt que dynamique, parce qu'il n'y a aucune quantité en commande. Confiance <b>haute</b> : le repère est solide. Ce n'est pas une probabilité de succès, c'est la qualité de l'indice.</p>
+            <div class="addr" aria-label="Adresse 01A640050B décodée">
+              <div><b>01A</b><span>zone</span></div><div><b>64</b><span>allée</span></div><div><b>005</b><span>travée</span></div><div><b>0</b><span>niveau</span></div><div><b>B</b><span>place</span></div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- GARDE-FOUS -->
+  <section class="band guards" id="garde-fous" aria-labelledby="h-g">
+    <div class="in">
+      <div class="g-head rv">
+        <h2 id="h-g">Ce qu'il refuse de faire</h2>
+        <p class="lede">Un bon outil d'implantation se juge aussi à ce qu'il ne propose pas. Ces règles ne se négocient pas, même quand la confiance est haute.</p>
+      </div>
+      <div class="glist">
+        <div class="g rv"><h3>Bloquer une place pour un article qui doit s'écouler</h3><p>Article en fin de vie : aucune commande, un reste de stock, date limite de vente passée. On laisse écouler le stock, aucune implantation n'est proposée.</p><span class="chip c-bad"><span aria-hidden="true">⛔</span> Bloqué · fin de vie</span></div>
+        <div class="g rv"><h3>Forcer une adresse incohérente</h3><p>Plus de repli forcé hors du bloc, plus de repli vers le centre. Quand rien de cohérent n'existe, l'adresse reste vide et la cause est écrite.</p><span class="chip c-warn"><span aria-hidden="true">⚠</span> À vérifier · sans adresse</span></div>
+        <div class="g rv"><h3>Donner deux fois la même place</h3><p>Chaque emplacement retenu et chaque plage contiguë sont réservés pendant le calcul. Une destination déjà occupée ou en doublon bloque la proposition.</p><span class="chip c-bad"><span aria-hidden="true">⛔</span> Bloqué · occupée</span></div>
+        <div class="g rv"><h3>Placer un article qui ne rentre nulle part</h3><p>Trop grand ou trop lourd pour tous tes types d'emplacement : il reste sans adresse et c'est signalé, au lieu d'être forcé dans la plus grande case.</p><span class="chip c-warn"><span aria-hidden="true">⚠</span> Sans adresse · signalé</span></div>
+        <div class="g rv"><h3>Bouger un carton tout seul</h3><p>PickWise prépare des plans de mouvements : affectations, déplacements, échanges avec tampon, réappro. Il ne pilote pas ton WMS : c'est toi qui valides, puis le terrain exécute.</p><span class="chip c-ok"><span aria-hidden="true">✓</span> Prêt · après contrôle</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STOCK EN PLACE -->
+  <section class="band port" id="au-dela" aria-labelledby="h-next" style="border-top:1px solid var(--line)">
+    <div class="in">
+      <div class="port-head rv">
+        <span class="eyebrow">Au-delà des nouveaux articles</span>
+        <h2 id="h-next">Et le stock déjà en place ?</h2>
+        <p class="lede">Placer les nouveaux articles n'est que le début. PickWise regarde aussi ce qui est déjà rangé, mesure la marche et prépare les mouvements, dans l'ordre où les faire.</p>
+      </div>
+      <div class="pgrid four">
+        <div class="pc rv"><span class="pk">01</span><h3>Réimplantation</h3><ul><li>Les déplacements et échanges qui raccourcissent la préparation</li><li>Un budget de mouvements et un gain minimum</li><li>Un échange passe par un emplacement tampon, en trois étapes</li></ul></div>
+        <div class="pc rv"><span class="pk">02</span><h3>Gains mesurés</h3><ul><li>Chaque commande simulée comme une tournée, par les allées et les transversales</li><li>Les mètres de marche avant et après, pas une promesse</li></ul></div>
+        <div class="pc rv"><span class="pk">03</span><h3>Réappro</h3><ul><li>Seuil et cible par article au picking</li><li>Transferts depuis la réserve par colis entiers</li><li>Quantités et lots conservés</li></ul></div>
+        <div class="pc rv"><span class="pk">04</span><h3>Plans suivis</h3><ul><li>Des identifiants stables d'un export à l'autre : CSV, Excel ou JSON</li><li>On simule, on annule, on revient à la source</li><li>Tout se sauvegarde dans un fichier projet</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNÉE -->
+  <section class="band day" aria-labelledby="h-day">
+    <div class="in">
+      <div class="rv" style="display:grid;gap:22px;max-width:900px">
+        <span class="eyebrow">Une vacation</span>
+        <h2 id="h-day">La journée, dans l'ordre des priorités</h2>
+      </div>
+      <div class="track rv">
+        <div class="tk"><span class="dot">1</span><h3>Charger</h3><p>L'export du jour ou le modèle Excel. Un bilan avant chargement : lignes lues, rejetées, et pourquoi. Rien n'est corrigé en silence.</p></div>
+        <div class="tk"><span class="dot">2</span><h3>Calculer</h3><p>Type d'emplacement, adresse, raison et confiance pour chaque nouvel article. Les urgences d'abord :</p><div class="tlo"><span class="t0">P0 · fins de vie</span><span class="t1">P1 · anomalies</span><span>P2+ · réceptions</span></div></div>
+        <div class="tk"><span class="dot">3</span><h3>Revoir</h3><p>Seuls les cas à vérifier demandent ton œil. Marque-les contrôlés au fil de l'eau.</p></div>
+        <div class="tk"><span class="dot">4</span><h3>Optimiser</h3><p>Réimplantation et réappro, avec un budget de mouvements. La marche gagnée est simulée sur tes commandes.</p></div>
+        <div class="tk"><span class="dot">5</span><h3>Sortir</h3><p>Des plans de mouvements en CSV, Excel ou JSON, avec des identifiants stables, prêts à charger après contrôle.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COCKPIT -->
+  <section class="band cockpit" id="cockpit" aria-labelledby="h-c">
+    <div class="in">
+      <div class="c-head rv">
+        <h2 id="h-c">Le cockpit</h2>
+        <p class="lede">Le cockpit met les décisions du moteur en scène : le statut d'abord, l'adresse en grand, la raison à côté. Essaie les onglets, puis ouvre la démo complète.</p>
+      </div>
+      <div class="win rv">
+        <div class="win-top">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="mono" style="font-size:12.5px;color:var(--faint)">PICKWISE · cockpit web</span>
+          <div class="tabs" role="tablist" aria-label="Écrans du cockpit">
+            <button role="tab" id="t-props" aria-selected="true" aria-controls="p-props">Propositions</button>
+            <button role="tab" id="t-occ" aria-selected="false" aria-controls="p-occ">Occupation</button>
+          </div>
+        </div>
+        <div class="win-body">
+          <aside class="side" aria-hidden="true">
+            <div class="grp"><span>Préparer</span><div>Accueil</div><div>Mon entrepôt</div><div>Données &amp; imports</div></div>
+            <div class="grp"><span>Décider</span><div class="on" id="s-props">Propositions</div><div>Réimplantation</div></div>
+            <div class="grp"><span>Contrôler</span><div>Contrôles</div><div>Suivi des transferts</div></div>
+            <div class="grp"><span>Piloter</span><div>Gains mesurés</div><div id="s-occ">Occupation</div><div>Familles</div></div>
+          </aside>
+          <div class="pane">
+            <div id="p-props" role="tabpanel" aria-labelledby="t-props">
+              <div class="filters" id="filters">
+                <button type="button" id="f-all" data-f="all" aria-pressed="true">Toutes<b>173</b></button>
+                <button type="button" id="f-bad" data-f="bad" aria-pressed="false">⛔ Bloquées<b>8</b></button>
+                <button type="button" id="f-warn" data-f="warn" aria-pressed="false">⚠ À vérifier<b>26</b></button>
+                <button type="button" id="f-ok" data-f="ok" aria-pressed="false">✓ Prêtes<b>139</b></button>
+              </div>
+              <div class="tbl">
+                <table>
+                  <thead><tr><th>Contrôle</th><th>Article</th><th>Adresse proposée</th><th>Raison</th><th>Confiance</th></tr></thead>
+                  <tbody id="rows"></tbody>
+                </table>
+              </div>
+              <p class="demo-tag">Les deux premières lignes sont de vraies propositions du 01/09. Les autres viennent du jeu de démonstration.</p>
+            </div>
+            <div id="p-occ" role="tabpanel" aria-labelledby="t-occ" hidden>
+              <div class="heatbox">
+                <div class="panel-h" style="color:var(--ink)"><b>Occupation utile · une ligne par allée, une case par travée</b><span style="color:var(--faint)">données réelles</span></div>
+                <canvas id="heat" aria-label="Carte de chaleur de l'occupation par allée et par travée"></canvas>
+                <div class="heat-info" id="heat-info">Survole une case pour voir le détail.</div>
+                <div class="ramp"><span>0 %</span><i style="background:var(--heat0)"></i><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i><span>100 %</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feat">
+        <div><h3>Fiche et plan d'allée</h3><p>Le verdict en tête, l'adresse en grand, 13 travées sur 6 niveaux autour de la cible. ↑ ↓ pour passer au cas suivant.</p></div>
+        <div><h3>Contrôles</h3><p>Blocages, suivi et qualité des données sur un seul écran, avec un filtre par cause.</p></div>
+        <div><h3>Réimplantation</h3><p>Les mouvements dans l'ordre d'exécution, avec le gain de chacun et pourquoi.</p></div>
+        <div><h3>Gains mesurés</h3><p>Les mètres de marche par commande, avant et après, simulés sur les commandes.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POUR QUI -->
+  <section class="band who" aria-labelledby="h-who">
+    <div class="in">
+      <div class="rv" style="display:grid;gap:22px;max-width:900px">
+        <span class="eyebrow">Pour qui</span>
+        <h2 id="h-who">Ceux qui décident où vont les cartons</h2>
+        <p class="lede">Grande distribution, e-commerce, prestataires logistiques : partout où une zone de picking doit rester rangée pendant que les références tournent.</p>
+      </div>
+      <div class="wgrid">
+        <div class="w rv"><span class="k">01</span><h3>Gestionnaires d'implantation</h3><p>Préparer les implantations du jour en quelques minutes et ne passer du temps que sur les cas qui le méritent.</p></div>
+        <div class="w rv"><span class="k">02</span><h3>Méthodes et amélioration continue</h3><p>Écrire les règles du terrain une fois, les rendre reproductibles et voir les familles qui se dispersent.</p></div>
+        <div class="w rv"><span class="k">03</span><h3>Responsables d'exploitation</h3><p>Voir l'occupation allée par allée, les anomalies et les actions à prioriser avant qu'elles ne coûtent.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCÈS -->
+  <section class="night band access" id="acces" aria-labelledby="h-a">
+    <div class="in">
+      <div class="rv" style="display:grid;gap:22px;max-width:900px">
+        <span class="eyebrow">Le voir tourner</span>
+        <h2 id="h-a">Essaie la démo. Le moteur, on en parle.</h2>
+        <p class="lede">La démo web est ouverte à tous : elle calcule vraiment, sur cinq entrepôts fictifs ou sur tes fichiers. Le code source et le paramétrage pour ton site se présentent en démonstration guidée.</p>
+      </div>
+      <div class="agrid">
+        <div class="a main rv">
+          <span class="k">En libre accès</span>
+          <h3>Démo web</h3>
+          <ul><li>S'ouvre dans le navigateur, rien à installer</li><li>Cinq démos : grande distribution, e-commerce, pièces détachées, pharmacie, entrepôt neuf</li><li>Propositions, réimplantation, gains mesurés, réappro, contrôles</li><li>En français ou en anglais, sur ordinateur, tablette et téléphone</li></ul>
+          <a class="btn js-app" href="PICKWISE.html">Ouvrir la démo <span class="arr" aria-hidden="true">→</span></a>
+          <span class="file">Données entièrement fictives</span>
+        </div>
+        <div class="a rv">
+          <span class="k">Sur demande</span>
+          <h3>Le moteur complet</h3>
+          <ul><li>Paramétrage pour ton entrepôt et tes règles</li><li>Import de tes exports WMS, colonnes associées une fois</li><li>Plans de mouvements au format de ton WMS</li><li>Version au code source lisible</li></ul>
+          <a class="btn ghost-n" href="#contact">Demander une démo guidée</a>
+          <span class="file">Présenté en visio ou sur site, sur tes propres données</span>
+        </div>
+        <div class="a rv" id="contact">
+          <span class="k">Contact</span>
+          <h3>Parlons-en</h3>
+          <p>Recrutement, pilote sur un site, ou simple curiosité : écris-moi, je réponds sous 48 h.</p>
+          <div class="mail"><span class="mono" id="mail">ghaythmejai1@gmail.com</span><button type="button" class="copy" id="copy-mail">Copier</button></div>
+          <a class="btn ghost-n" href="mailto:ghaythmejai1@gmail.com?subject=PickWise">Écrire un e-mail</a>
+          <span class="file" id="copy-ok" aria-live="polite">Ghayth Mejai</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="band faq" id="questions" aria-labelledby="h-faq">
+    <div class="in fq">
+      <div class="rv" style="display:grid;gap:22px">
+        <span class="eyebrow">Questions</span>
+        <h2 id="h-faq">Ce qu'on nous demande</h2>
+      </div>
+      <div>
+        <details><summary>C'est de l'IA ?</summary><p>Non, pas au sens d'un chatbot. C'est un moteur métier et statistique : des règles écrites avec le terrain, une densité par noyau gaussien et un score d'affinité. Pas d'IA générative, pas d'API distante, et il ne dépend d'aucun WMS en particulier : il lit des exports.</p></details>
+        <details><summary>Mes fichiers partent quelque part ?</summary><p>Non. L'app lit les fichiers dans ton navigateur et le moteur travaille en local. Rien n'est envoyé sur un serveur. Ton travail se sauvegarde dans un fichier projet, sur ton poste.</p></details>
+        <details><summary>Je peux télécharger le moteur ?</summary><p>La démo web calcule vraiment, sur les démos ou sur tes fichiers. Le code source lisible et le paramétrage pour ton site ne sont pas en libre accès : ils se présentent en démonstration guidée, écris-moi depuis la section Contact.</p></details>
+        <details><summary>Pourquoi une proposition en confiance haute peut être bloquée ?</summary><p>La confiance dit si le repère utilisé est solide. Les contrôles regardent autre chose : la place est-elle libre, le colis rentre-t-il, l'article doit-il encore être implanté. Les deux sont indépendants, et le blocage gagne toujours.</p></details>
+        <details><summary>Il marche pour mon entrepôt ?</summary><p>Si ton picking est fait d'allées, oui : tu décris ton plan ou tu donnes les coordonnées X/Y, puis tes types d'emplacement et tes règles, sans toucher au code. Il a tourné sur un picking de grande distribution de 66 allées et sur cinq entrepôts de démo de métiers différents. Les plans sur plusieurs étages, les sens interdits et la préparation par zones ne sont pas encore modélisés.</p></details>
+        <details><summary>Ça se branche sur mon WMS ?</summary><p>Pas directement. PickWise lit tes exports et produit des plans de mouvements en CSV, Excel ou JSON, avec des identifiants stables, que ton équipe charge dans le WMS. Rien n'est envoyé ni confirmé automatiquement. Un connecteur se construit avec un premier site.</p></details>
+        <details><summary>Où en est le projet ?</summary><p>Version 2.6 : une application locale, sous contrôle humain, couverte par des tests automatiques et des parcours dans un vrai navigateur. Sur le site d'origine, elle reproduit le classeur Excel à l'identique (46 champs sur 46). Prochaine étape : un pilote en lecture seule sur un site, pour mesurer avant et après. Aucun gain de productivité n'est annoncé tant qu'il n'est pas mesuré.</p></details>
+        <details><summary>Je peux l'utiliser sur le terrain ?</summary><p>Oui. Sous 650 px de large, les propositions et les contrôles passent en cartes, lisibles sur tablette ou téléphone pendant l'audit.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIN -->
+  <section class="night band end" aria-labelledby="h-end">
+    <div class="in">
+      <h2 id="h-end">Ton prochain article a <span>déjà une adresse.</span></h2>
+      <div class="end-row">
+        <p class="lede">Ouvre une des cinq démos, essaie-la avec tes fichiers, ou demande une démonstration guidée sur tes propres données.</p>
+        <div class="ctas"><a class="btn label js-app" href="PICKWISE.html">Ouvrir la démo <span class="arr" aria-hidden="true">→</span></a><a class="btn ghost-n" href="#contact">Me contacter</a></div>
+      </div>
+      <footer>
+        <span>PickWise · aide à l'implantation et au pilotage du picking · conçu par <a href="/" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Gayth Mejai</a></span>
+        <nav><a class="js-app" href="PICKWISE.html">La démo</a><a href="#contact">Contact</a><a href="#questions">Questions</a></nav>
+      </footer>
+    </div>
+  </section>
+</main>
+
+<script>
+document.documentElement.classList.add('js');
+/* si Big Shoulders ne se charge pas, passer en taille de secours */
+(function(){const de=document.documentElement,c=document.createElement('canvas').getContext('2d'),w=f=>{c.font=f;return c.measureText('EMPLACEMENTS').width};
+const chk=()=>{const ok=Math.abs(w('900 40px "Big Shoulders Display",monospace')-w('900 40px monospace'))>1;de.classList.toggle('nofont',!ok)};
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(chk);setTimeout(chk,2500)})();
+/* Liens à remplacer une fois les fichiers en ligne */
+const LINKS={app:"PICKWISE.html"};
+document.querySelectorAll('.js-app').forEach(a=>a.href=LINKS.app);
+const cm=document.getElementById('copy-mail');
+cm.addEventListener('click',()=>{const t=document.getElementById('mail').textContent, ok=document.getElementById('copy-ok');
+  const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('mail'));const w=getSelection();w.removeAllRanges();w.addRange(r);ok.textContent='Adresse sélectionnée : copie-la avec Ctrl+C'};
+  try{navigator.clipboard.writeText(t).then(()=>{cm.textContent='Copiée';ok.textContent='Adresse copiée'},sel)}catch(e){sel()}});
+
+const MAP={"3":"r...|..xr|....|.gx.|....|D.xD|....|.xD.|....|....|....|....|r.xr|..xr|....|.xg.|....|.xrr|...|...|...|...|||....|....|....|....|.xDD|.x.|.v..|....|..|..|....|....|....|....|....|....|....|....|....|....","4":"....|....|....|....|....|....|....|....|g..g|....|....|....|....|....|v...|...g|v...|....|...|...|...|...|||....|....|....|....|....|....|....|....|..|..|....|....|....|....|....|..xg|g.xg|..xi|i.xg|g.xv","5":"iixi|e|ecxc|vD..|v.xb|vvxb|vbx.|..xD|..xa|grx.|D.rx|evx.|gDx.|..xD|v..l|.vxg|..c.|..xa|..v|v.c|.vv|ci|||.gxg|i...|Dg..|....|.i..|...v|lexe|..vv|ve|..|....|.axh|e.xa|.e.e|aexe|..xg|....|.exe|a.x.|....","15":"....|..|....|....|....|....|....|.|....|....|....|....|....|..|....|....|....|....|...|...|...||||....|....|....|...|....|....|....|....|..|..|....|..|....|....|....|....|....|...|....|....","16":"|........................|....||....|....|....|....|....|....|....|....|....|....|....|....|....|....|...|...|...|...|||....|....|....|....|....|....|....|....|..|..|....|....|....|....|....|....|....|....|....|....","17":"|....||....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|...|...|...|...|||....|....|....|....|....|....|....|....|..|..|....|....|....|....|....|....|....|....|....|....","18":"....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|...|...|...|...|||....|....|....|....|....|....|....|....|..|..|....|....|....|....|....|....|....|....|....","19":"aaaa|aa..|.a..|....|..a.|a...|....|....|.a..|.aaa|aaaa|aaaa|aaaa|aaaa|aaaa|aaaa|aaaa|aaaa|aaa|aaa|aaa|...|||....|....|....|....|....|....|....|....|..|..|....|....|....|....|..a.|a...|....|....|....|....","20":"aaa||aaaa||aaaa||aaaa||.aaa||aaaa||aaaa||a.aa||aa..||.aa||aaa||||..aa||aaaa||a.aa||a..a||aa||aaaa||..aa||..aa||||.aaa","21":"|....||....||....||....||....||....||....||....||....||...||...||||....||....||....||....||..||....||....||....||....||....","22":"....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|....|...|...|...|...|||v...|....|....|...c|....|....|....|....|..|..|....|....|....|v.v.|v...|cccs|cc..|.vci|..v.|i...","23":"css.|s..s|sscc|cscc|sls.|ccsc|s.sc|ccsc|cccc|cvcc|cccc|cccc|cccc|cccc|cccs|clll|cccc|cccc|l.l|l.s|lll|cls|||c.cccv.....c.......l...lll|ccc.|.................l...ls.l.|clcl|...l....l.........lvv..lv.|lllc|.v.vv.t........t.t..vv..v.|cscc|cc|cc|.vv.v...v.vt.s.s.c..vv.vev|v.cs|.v..v..v.svs..s.vvv.vsv.v.|sclc|v...v..vc.v......c.l.c.c..|s.cc|.cvv...vvvvv..v...svsv..v.|v...|..vv.vv..scvv.v.vv.vv.....|v..v.c.vccv......v.v..c.","24":"vvvlvlllllllvl.lll.vl...vv|.cvvvllll...lv..vvvvvll.|vvvvlv.l.llll.lllvvvll.l..|.llc|c..c....v.vv.v.vvvvvvcvvv.|.c.c|.v.ccccc.c..cccccvvvccvcv.|..c.|cccc|sccc|c.cc|cc.c|..c.|sccs|cscs|tlvc.vclcc.vv.vvvccvb.lc|.scs|.l..|scc|.sc|lcs|.sl|||.lll|cv..l..vvvvlvvl.v.vll.l..c|cscc|...v.v.cc.....v.cv........|cc.c|..l.cc.vvlvlvvv.c.c.vvvcvv|.vls|...l.l..vlllllllv.vvl...vv|sc|vc|c...|...v....v.vv.vc.vll.llv.vv|lll.|..vv...vv..vvvv..vvsvvvvvv|ivi.|.v..vvv.s.vv...vvv.vv..v..|ssvs|.....ssc.......c..c..s.s..||.s...c.css.sss.ss...c.s...","25":"|l|l.....v...c..o.vvvvvv.vv.v|vv..|cv..v............vv.v...e.|ii.v|....c.....vv...avv.....e.v|ll|clti|i.il|..v.l..ll...l.llllllvll..l|lvvl|...l....vt.t.c.o.c.....v.v|vsvv||vvvt|c.e.......vv.vvvvv.vvv....|vvvv|vii|vvv|vcc|.|||.v.vvv...vvvv..vvvvvv...v.|vvvi|......v..v...v...v.vvv...v|ivvv|..v..vvvvvvvvvvvvvvvvvvvvv|vvvv|vvvvvvvvvvvvvvvvvvvvvvvvv.|v...|vs|vv|.s........v............v.v|......v.v.v.v.............|..........................|.vvv|...........vvvv..v.......v|vssv|.vccev.v...cc..ccc...c.c..|vvvv|.c.........c.c..c.........|....","26":"l|oeovooooooveooovovohio..|oi.v|.o...oo.ooovooo.o...oo..|vi.o|ooooovoovovvo.oo.....ios|io|i...|.ivo|o..i|iiiv|v...|.v|.ivv|v...|i..i|....|v...|i.v|.v.|v|lvs|||.n.l|oovvvvooovovvvvov...vv..v.|ill|...v..v.v.vv........v.....|...vv.v..u..oos..s.oeeee.o|sivi|vv......eoevevee...j.j.jej|..v.|ll|il|vi|iivl|jj..vssp.s..e...vbvs...epo|loii|oohhhhhhoooheevhopppphh.hh|vosssss.sos.sosssss.s.....|lii|..ssssssssvs..s.ss.ss.ssn.|.sss.ss...n.vvo...oo....nn|inii","27":"|eiij||jjii||jj..|iiii|iiii|iiii|ilnn|niii|iiih|iiii|i.ii|iiii|liii|jh.l|ilii|iii|iii|iio|ii.|||hvohhoio.oho.ooooooooh..h.|llll|oioo.i..iihoo..o.h.ooh.o..|llli|..voo.ovooooooh.ooooooo.o.|llll|...o..o.h......lloooololll||ll|il|lvll|llll|..ooooooooo.oo.on.oo..n...|illn|nnn..nnn....nnnnn.n.nnnnb.|llll|n.....n.nn.nnnnn.n.nnn....|lili|iii.iiinnennejeen.ee....nl|llii","28":"j.jj|jjjj|nijj|jlji|.j..|ifii|iiii|..i.|iioi|iii.|i.ii|iiih|..i.|..i.|..ii|ii.i|iiii|ii.i|i.i|i.i|ii.|iih|||hh..|iiii|iiii|iiii|iiih|iiii|hhhiiiuuuiiiiihniuhhhhhn|inhhiihhhhhhhh.bih.ibupp|ii|ii|iiii|iiii|..ii|iiii|iiii|iiii|iiii|...i|eieee.enihiibeeeeehehhebnu|iiii","29":"iiii|ihii|ihii|...i|iiii|iiii|iiii|.iii|iiii|iiii|hiii|.iii|iiii||iiii||hihi||iii|iib|iii|iii|||hohhhhheuuhhuhhihhh.hohhub|iiii|h.hhhohhhbhnjohhubhibhh.bh|iiii|hhhhhhhhhhhhhhhhuhhubuuo.h|iiii||iihi|ii|ii|hu.uhhuuhhhhhhhuhhhuhuhihh|ihii|h.hhbhhbinhh.hhhh.hhhieh.u|.ibi|hhunb.eeehiih.hhihhhbhhhuu|iii.|hbiiibjbbbbhihibhhb.bb.iuh|hiii|iiii|hiii","30":"hhhh|hhii|hhhh|ihhh|hhhh|hhii|.iii|iiih|iiii|iiih|iiii|iiih|hhhhhoiinhhhn.ieo..ho.ho|bbii|b.nhhhhhhbohi.hoh.hhhh.o|iiib|bhhhihhhhhhhhhhh.iohhhh.|hiii|hiu|iii|hib||||iiih|iibb|ih.h|hioi|eieh|hbb.|.hbi|iiib|ii|ii|iiii|hiih|ihhi|iibi|iiii|iiii|iiii|iiii|ihei|oiib","31":"hh|bhhh|hhhb|bbbh.ebobbebb.i.bbbbbebb|hhhb|ihbhhhhbhiihhhhhhhhohhhh|hh|hhhh|hhhh|bhhh|hhhh|hhhh|hhhh||hhhh||hbbb|hhhh|hhb|hhb|i|bbb|||bbbh|bbbb|bbbh|heoh|bbbn|nnnn|nnnn|nnnn|nh|nn|nnn|nnnn|hhnn|ooho|bobh|hbbb|bhbe|ibbb|bbbb","32":"bbbn|bbbbbbbobbeeeehebhbibeeb||eibbiehbbehhboieeibbebib||bbbb|bbbb|bbbb|bbbb|bbbb|b...|bbbh|eehbnibeebbeebehebee.ee.|obbb|eheepbeeeeeeeebb.bebbeee|bbhbebebehboibbbnbneeeeb|bbbb|bbbb|bbb|bbb|bib|bbo|||bbbh|bbbo|bbbb|bnbb|bbeb|bbbh|bnno|oobh|oo|oo|behh|.b..|bbbb|bbbb|bbbb|bbbb|bibb|bbob|.b.bbiebioebb.oibpbe..bb|bbbb","33":"|bbeenoeepeeepbeebebeeeeb||eeeebeeeeeeoepopppb.epee|booo|ieeieiipeopppeheppppppep|ebbb|bbbb|bbbb|bbbb|ebee|bbbb|bbbb|bebb||behb|bbbe|bbbb|bbb|bbb|bbb|bb.|||bbbb|bbbo|bbbb|bbob|bbbb|bebb|bbbb|bb.b|bb|bb|bbbb|bbbb|bbbb||bbeb|ebibbobbbbpbeebhbbhohhei|bbon|iibeechbboibbebobbbeeoeb|bbeb|bbbbeobebbeeboboobbhbbbb","34":"|eeee|||||eeep||eeopopbooppppepepeeeehpppb||eeeeepeeeppeebopebpbieenbe||eeee||phibpiiipiipieibiiiibeeeep|eeee|eeeeeeeeebebeepepbeeoeeeee|eeee|eeb|bbb|bbb|bbb|||bbbb|bbbb|bbbb|bbbb|bbbb|hebb|.bbb|bbbb|bb|bb|bbbb|bbeb|eeeeebbeeibebbpebeeebneb|bhpeeeeeeehhbpbpieieeeee||bbbb||bbie||bbbb","35":"eeee|he|eeoohbee.eepep.eebpee.pe|bbbb|e.pbeeeu..eppepp.p.e.ppe|eboi|een.pepppppppp.eppepuppe|pe|pnphpeeeeeeepeeeeeeeieep|hhhh|eeeeeeeipeeepppppeeeeeei|hhhh|oipeeheeebhpheoeupuuhbbe|ee|eeee|eeee|eeee|eeee|eee|eee|eee|e|||eeee|eeep|eih.|eee|ehee|eeee|eeeb|ebee|ee|.e|oeee|.e||beee|eehb|eeoh|hhhh|hhh|hhhh|ehhh","36":"epi|ephheeheeeoe.noeeooeeheo|hhhh|oheh|hhoh|huhh|hohh|hhhu|enhh|hhhh|hohh|ehoh|ohhh|hhho|hooo|oboe|ohoh|ohpo|ooo|hhh|hh|ohh|||hhhh|bhhh|hhhh|hhhe|eeee|ohhh|oohh|hhhh|hh|hh|phhh|hhhe|hhhh|hhhh|hhoh|hhhh|hhhh|hhhe|hhhh|hhhh","37":"|piip|eeee|puuu|heeu|eoep|eeei|eeop|peee|neee|eeee|eoee|ppee|epip|pppp|pphp|puee|hphhephehehhpphheppeeeep|hee|epp|pep|epp|||ppih|eppeeeeeepeeeeeeepeeueee|pppp|ppee|eene|eeee|eeee|eeee|he|ee|eeee|peupeeeeeeeeeeeheeeheiee|heee|eeeh|hehh|hhhu|eueh|phhe|ueuu|ueeu","38":"bbee|uuubebuubbbeueeubfbbeube|ffuu|obubbbbbb.bbbb.beb.bbbbb|uhue|ubui|uuue|fu.e|uuuu|uuuu|nuuu|nuuu|uuuu|uuu.|uuub|oufu||uhhu|bfb|off|f.f|ffh||||bhff|ffff|bfef|bbeb|bbbb|ehb.|bebb|bb|bb||bbb.|bb..|ebbb|bb.e|bbbb|bbb.|bbbb|bbbb|bbbb","39":"||||bbbbppbbbbpfbeb...bpbbbb||bibbbeebibb.bb.ii.eibbbb|beee|bbeb|ebebeeeeoneebbbebeu.bbuu|ebbe|kebbeneeebbbeobbb..eb.be|eeee|ebeb|eeee|ebee|eeee|eeee|eee|eee|eeb|.kk|||kkke|kkkk|kkk.|oeee|eeee|boee|eeee|beee|ee|ee|bbbh|bbbu|bbbb|bbbb|ibb.bb.bbeeeeebbbbb.bbon|bbbb|bbbb|bbbb|.b.b|bb.b","40":"||||||f||||||bf||b.ef||ff.f||f..||f||||obbbbbbbobbbebonbbbbbbbb||ff||ffff||ffff||ff||ff||ffff||ff.n||.f||obbbbnfbbbfbobbnbb.nbbbf","41":"|ffnfnbffffffnbfoffboffff||ffff||ffff||ffff||ffff||ffff||.fff||.fff||fff.||fff||f||||||ffff||ffff||ffff||ff||ffff||ffff||.fff||f.ff","42":"|fbnf|ffff|ffff|.nfn|nnfn|nnnn|nffn|nfnn|nnnn|nfff|nfkffnfffffffbfffnnffnfn|fnff|ffff|fffn|fnff|ffff|ffnf|fff|fff|fff|nff|||ffff|ffff|ffff|ffff|ffff|fnnf|ffff|ffff|ff|ff|f.ff|ffff|ffff|ffff|fffn|fffn|ffff|nfff|ffff","43":"nnnn|knnk|niii|fnfkffffnnenfoffffffifbj|innn|..nfkffkfnnbkkkkkkkknkkk|kkkk|kkkk|kkkk|kkkk||kkkk|kkk.|k.kf|fkkk|kkkk|kkkk|fffffffffnfnfffkffj.nf.o|kkk|kkk|kkk|kkk|||kkk.|.kkk|kfbk|fff.|jf.f|jnfj|jbjj||j.|jf|jjb.|j..j|jjj.|jfjf|jjjj|jb.f|..f.|..jj|fjj.njjj.jjfoffffffffoff|.jjf","44":"kkkk|kkkk||kkkk||kknk|kkkk|kkkk|kkkk|kjnk|kkkf|ffff|ifff|bkbbbbffbbkbfbbknnbnkjbb|ktff|ffff||ffff|fff|fff|fff|f.f|||fffn|fkff|ffff|j.ff|ffff|ffff|bfffobffoffffkffjjkjkfjf|ffff|jf|jj|ffff|.fff|kf.k|jjjj|j.jj|fj..|fjjk|jjj.|jj.j|jjjj","45":"jjjj|jjj|jjjj|jjjj|ojjj|jkjk|jjjj|kjjj|jjjj|jjjj|jjjj|jjjj||ikjkkkjnjkkkknkojkkkknkk|kjkkkkkkkknkkk.nn..nnnnj|nknkjnjjkkjjjjffffj.nnkn|jjjn|jjjk|jjo|jjk|jkj|f|||jnjj|j.bj.bjfjnjbooooojoojbbb|jjjj|jjjj|jjjj|eeben.nn.nnbjboobo.oo.jo|jjbj|ooefbfffbbb.kjbbbkbbojbb|nb|jj|jjjj|njjj|jfjj|fjjj|jjjk|oooo|ofoj|kjjj|jjjj","46":"nj|knnknknknnnonjnnnnjnnnnn|njjj|j.jj|jb.j|jkkj|j|jojoonjnnnnnjknnnjn.jooj|jjjn|jfjf|.jjj|k.jj|jj|jjjj||.kjj|jjjj|jjjj|jjk|kkj|.|kjk|||||kkk|kkkk||||kkkk|.k|kk|kk|kkkk|kkkk|kkk.|kkkj|jbojnj.nennnnfnnnjnjfjnn|.kk|nnnk..nnnn.fknknoooooooo|fonn.nnokof.n.kkffff.fff","47":"|kkkk|kkkk|kkkk|kkkk|kkrk||kkjk|djkd||kkkk|.kkj|kkkk|kkDD|D.fD|jddd|jdkd|dddd|ddj|kDb|ddd|rD.|||ndjjk.kjkjjjjkojjjjj.k..|r...|ddkb|dddd|knn.jj.jjjj.jjjDjj..jDjj|jddd|nnknnknnnnjjkk.nnnnnnn.k.k|djkd|dd|bd|jkkkkfkffkfkjj.fkkfkf.fk.n||d.dd|||...f||dfd.|ffonffoooooookfkkoonfofn|dkdd","48":"ooss|j.jjjjjj..jdnjjn.jjjj.jj|aamd|aa.a|aaad|ajaa|aaa.|jjjj.jo.jjjkj..o.j.dj..d|jdjjjjj.nj.jaj.jaja.anj.|adka|.aaa|aaaa|oaad|aaaa|jnjjkfjnjjjjjjjjjjkfjjjj|aaaj|aaDj|jjn.jj.jjjjj.jjaj.jjjjnn|sad|a.a|aaj|aaa|||njkjjjj..jjjj.j..jnjkjjj|aaaa|jjjjjjjjjjjjnjjjjjjkkkjj|jkbjjjj.kjnjjjjjk.jjjjjj|e.jjejenjjenjkjjjjjkbjjb|jjk.kjjjbj..jj.bkjjjjjjj|b.bbb.bbkk.fffffffffjnkk|j.kjjjn.n.jnnnnjnjnnojjf|av|vv|kjjj.jjjkjjk.kk.jkkknknk|kkkkkkkkjkkkk.jkkkkk.jkj|.kknkskkkj..k.kkjkkkknkj|kjkkkkkkkkjnkjk.k..kk.nk|ovv.|k..kkkkk.nkkkkn.kkkn.kkk|dddd|snn.nndd...daa.j.dffffff|ddvd|s.kksdkksn..k.kkoojkkd.s","49":"|fo..|....||dddd|||dddd|ddrd|ddd.|dddd|vvvD|..................nnnn..|ffr......ss.............|....nn.nnnn...nnn.nnn...|.kkk||....|...|vv.|vvj|vvv|||.vvD|vvvv||kkkkkk..vk.kkkkkokkkj.kk||||r.vv|.v|aD||vjv.||||vjaa||dvvv||vvvs","50":"dddd||ffdfdkdodd..dff.f.oo.vdd||ovddddddd.dddnddddddddvd||dddv|dvvv|fdff|vDff|ddv.|dddd||DDxD|f.......................|r...|DDDD|.Ddf|fdv|..D|Dxr|rxr|||rrxr|rrxr||rrxr|fddd.v.dddvdvvdddvvdddd.|rDxr|DDxD|rDxD|.o|rx|dDx.|Drxr|.oorddoooooro.v.vvvvdd..|rrxr|.rxr|rrxr|rrxr|r.xr|ffff|vvvf","51":"|nDDD.onnDD.DDDDDD.DDDDrr||....DDDD.DDo.rrooo.oo.o.||D...|D|rrxr|rrxD|.rxD|Drx.|rrxr|rrxr|rrxr|r...|rrxr|D.x.|odDo|DdD|Dff|D|rff|||DDDD|fdDD|DdDD|dD.D|DDdD|Dfdf|DDff|DDDd|f.|fD|DD|rrxr|rrxr|dDfd|D.xr|orfDgf.ffDffDDfffnDfffff|.DxD|.f.fff...ffffffffffffffD|ffff|DDofffooffffofffffdjfDff","52":"|xrrD||DrDD|rDDD|DddD|dddd|dddd|dddd|oDrx|r...|...r|rrxr|rDxr|D...|r...|....|r...|r..|..r|rxr|rxr|||...r|oDgrr...Dg...r...o....D.|rrxr|D.DD......r....rrrrrnrrn|rrxr|rrxr|r...|...r|xr|rx|...r|r...|rrxr|dddd||dDdd||Dddd||dddr","53":"DDDd|..D.|...D|DDDD|D.DD|DDrD|.D.D|.DDD|DDDD|.D..|r...|Drrr|rDxr|DDDr|rrrD|Drrr|.Ddd|rrxr|dDr|DxD|Ddr|DxD||||DDxD||DDxr|rxDr|.r.d.vv.Ddoor..d........|r...|.......dd.o...d...d.d...|Dr|DD|...D|.rxr|rrx.|rrxr|r...|rrxr|rrxr|rrxr|r...|rrxr","54":"DrDD|rDxr|DD..|D.Do|DDxr|.DDD|.DD.|DDDD|DDDD|DDDD|.DDD|DDDD|D.Dr|rD..|r...|DDDD|.DDD|DD.D|DDD|DDD|DDD|.DD|||D.Dn|nDnn|DDDD|DDrD||Dnnn||rnnn|DD|.D|DDD.|DDxD|DDnD|aaDD|DDDD|DDDD.D.DDDD.............|DDDa|...gg...g..............n|dddd|aDda","55":"ggga|a|gaaa|aa.aaaaaaagaaagaaaaaggaa|ggxg|ggxg|ggx.|g.|ggx.|ggxg|g...|ggxg|ggxg|gg|.gxg|ggxg|g.x.|ggxg|gxg|gxD|rxg|.|||ggga|gagaaaaagggggaaaaa.nag.a|aggg|gxg|g...|gngagmgmmmmmg..g.g..g.gg|ggxg|gagaaaaaaaaaaaaaaaaaaaaa|aa|ag|aaga|aa|aaaa|aaaaaaaaaaaaaaaaadaaaaaa||a.............a..aa...dd||ddd|aaaa|.a.a.aaa.aa......a..a...","56":"gggg|.rxg||ma.ammamammmamaammamammm|ggaa|amaaamaaaammaammmgmmaamg|aaga|aaamagmma.mmmmmamgmmammm|agaa|ggggggaggggg.ga.gagmgag.|aggg|ggmmm.amgg.aamagagga.a.m|..aa|mma.mmamaaaaaamaaamamaaa|agga|aaaaama.maagaaaaaaaaaa.a|gaag|aaaaamaaaaaaaaaagmaaaaam|aaa|aga|gxg|gxg||||ggxg|ggm.m...........a.a....a|ggx.||rgxg||ggxg|gg|aa|gg..ggmggaa.agg..aa....g|g.xg||ma...a....maaaaamamaaaam||gaam.aaaama.amgmngm.amma|aaggagaraaaaaaaaaaaaaaaa|aaammagaamaaaagaaammaaga||aaaaaaaaaaanamaaaaaaaagg","57":"aaaaaagaga.agaaaggaaagag|ggxg||agaggagnaaaagamaaaaaaaag||ggxg||ggxg||ggxg||ggxg||ggxg||ggxg||ggxg|..g|gxg|gxg|gxg|||ggxg|ggxg|ggxg|...g|....|.gxg|ggxg|ggxg|gx|gg|ggxg|ggxg|.gxg|g.xg||ggx.||g...||ggga","58":"ggxg|.gxg||ggx.|ggxg|ggxg|aaaa|aaad|dddd|ggdd|dddd|dddd|.d.d|dddd|dddd|dddd|adad|dddd|ddd|dad|dad|ddd|||dddd|aaaa|aaaa|aaaa|aaaa|adaa|aaaa|aaag|.a|aa|aaaa|agag|aagg|aaaa|aaaa|aaaa|ggag|gggg|ggga|aaaa","59":"aaaa|aagg|aaaa|gaag|aaaa|aaaa|agag|ggag|gaga|aaag|aaaa|a.aa|aaag|aaaa|g...|mmaaaamaaaaaaamaamaamammaa|aaaa|maaamamaaaaamagama.aaaaaaa|g..|aaa|a.a|..g|||nannaaaaaa.aaaamaaa.aaaaaa|aaaaanaaaaaaaaaaaaaaaaaaaa|aaaaaaaaaaaaaaamaaaaaaaaaa|aaamaaaamaaaaaaaaaaaaaaaam|aaaa|aaaa|aaaa|gaaa|aa|aa|aaaa|aaaa|aaaa|aaaa|agaa|aaaa|aaaa|aaaa|aaaa|aaaa","60":"ggga||gagg||aggg||gggg||gaag||agaa||ggga||aaga||aaa.||aaa||agg||||aaga||aaaa||aaaa||aaaa||aa||aaaa||aaaa||aaan||aaaa||aaag","61":"|ggag||amgg||aaag||aaga||aaaa||gaaa||agma||.gxg||ggaa||aaa||aaa||||gaxa||.gxg||aaaa||agx.||gx||.gx.||aaaa||.gxg||aaaa||aaaa","62":"aaaa|aa.a|aaaa|aaaa|aaaa|aaam|aaaa|aaam|aaaa|aaaa|aaaa|aaaa|aaaa|maaa|aaaa|aaam|maam|mmam|maa|mam|mag|mmm|||mmmm|mmmm|mmmm|mmmm|mmmm|ammm|ammm|mmam|ma|mm|mmmm|mgmm|mmmm|m.mm|mmma|mmmm|mmmm|mmmm|mmmm|m.mm","63":"mmmm|mmmm|mmm.|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm|mmmmmmmmmmmmmmmmmmmmmmmm|mmmmmmmmmmmmmmmmmmmmmmmm|mmmmmmmmmmmmmmmmmmmmmmmm|mamm|mmmm|mmmm|mmm|mmm|mmm|aaa|||mmam|aaaa|aaaa|mmmm|mmmm|mmmm|mmmm|mm.m|.m|mm|mm.m|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm|mmmm","64":"mmmm|mmmm|mm.m|...m|.*xg|m...|.mDm|g...|gDxg|gn..|ddx|xrgg|DrDx|mmgg|.rgD|D...|.m.D|D..D|Dm.|DxD|Dxg|xDD|||DgDD|Dgxg|grrD|gDxg|DngD|DgDg|DDxD|DngD|DD|DD|DDDD|DDDD|DDDD|rDxD|rDxr|DDxg|gDxr|D...|DDxr|DgxD","65":"gggg|gggg|ggDg|g...|ggDg|Ddgg|ngDD|DDDg|gDx.|....|D...|DDDD|ggxg|DDD.DDnDnDnnnDDggDDDDDgg|gDDg|g...|g...|DDxg|DxD|dxg|gxD|g|||DDxr|rrxr|Drxg|DDxg|DDxD|DgxD|...D|DDxg|DD|DD|DDxg|rgxg|DDDD|DDDD|DDDD|DDDD|DDDD|DrDD|.DDD|gDxg","66":"rgggggngDggggDDgggDgggDg|gggg|DgDD|gggg|Dggg|gDgD|gDxg|DDDg|g...|gDDD|gDDg|gDgD|ggxg|Dggg|dggD|g...|.gxg|ggDDDD.DDgDDDDgrrDnDDDDg|..D|D..|D|DDD|||gDxD|DggDgDDgDDDggDDDDgggg.gg|Dgxg|ggxg|ggxg|ggxr|ggxg|ggxr|DD|Dg|r.xg|ggxg|DDxg|Dgxg|ggxg|ggxg|ggxg|...g|gDxg|ggxg","67":"pp.vvpp...v..ppcp.vpp.cv|kvkkkkkkkkkkkkkkkkkkkkkk|kkkkkkkkkkkkpppveeeeeeee|vvpvvpvvvve.ccq.vpvcvvvv|vvvp.pvcvvpcvvvvvvvvvvvv|c..c.cv.cv.vc..cvvpvc..p|vvvvv.pcvvvvvvv.vvvvv.cc|.c.cccvccvc..ccc.cc..c.c|.cpcvpvvcvvppv.vvppcppvp|c.cvccv.cv.cvv.cvcvc..c.|v.vqvqqvvvqvvvvvvpvvvvpc|q.cvvc.c.vv..c.vvc.ccv.v|.vpvvvpvvvvcvcvv.vvvvcqv|pvcvcc.ppvpp..v.p.vvvvcc|vvvcpvvvc.pvvcvpvvpc..vp|v...cvvvvpv.vccpv.pc.vvv|ccvpvvcvp.vcc.vvvccvvcc.|cvcvcvccvc..cccvcccccccc|vcc|.vc|pcc|kv.|||c..c.cv.c.ccccccc..cccc.|..cc..ccc.cc.ccccccccvcc|cc...c....c..c.v..vv..cc|.ccc.vccccccv.c.cccc.v..|..cccc.cc..c...vc.c.vc.v|p...c..vvc.p...cccvcvc.c|.ccvcvcc.c.cv.....vc..vv|vcv.c.c.cc.v.cvc.c.cv.pv|v.|qi|.vcc..c.cc..cccccvcccccv|cccvccccc.vccc.....c.ccc|cvp.cc..cccccc.vcccc..cc|c.ccc..vc..ccccvvvccppcc|cccccvccvcccccccvccvc.c.|cvvvvvlc.cccc.cc.cc.vccv|.v.vcccvcccccccvvcccvc.c|.c.c..cvvcvvv.ccccccvvvv|v.vvvvcvvvcvvccvvccvccvv|vvcccvvvcccc.c.cvcccvccc","68":".kkv||kmcb||..cvvp.vp.vevv.vvvv.vcvv||k.kvkq.vpk.vkpc.kkkkkkkk||ppvvc...qcqvvpcvvv.vvvcp||p.ppppppppppppppp.ppvppp||pp.ppv..c.epp..ipp.p.c.p||.pppvp..eeieppi.ipvpeep.||.ccc...c..ccccv...v.vv.c||ccc||kcp||||...vvvev..cv.vv.elcccccc||cpcccccccccvvpcccccccccv||vvccvvccvvcvc.ecvvcccv.c||..........a.........a...||a.||......aaa..a....a..a....||.a...................a..||...aa...........ccav.vvv||vvvvvvvaavvvvvvvvcccaccc||vvva","70":"v|vvv|vvl|vvv|vcccvvcvccvvvvvvvv|vvv|vvv|vcv|vvv|vv.|vvvvcvcllvvvqvqclv|vvv|vvv|vvv|vvv|cvv|v.v|vvv|vvc|vvv|vvv|vvv|vvl|vvv|v|vvv|||||vv|vvv.|vv|vvv|vvv|vvv|q..|vvv|qqq|qqq|qqq|v.v|...|vvv|.cv|l.|ccv|.vl|vv|llqv","71":"xvv|vvv|vvv|vvv|vvqvllvcccqvllvcqv|vvl|vvv|vvv|vvv|vvv|vcvccvvccccqcvvlvv|vvv|vxv|vvx|vxv|vvx|lcv|vxv|vvv|vvv|clv|vvc|vlc|vvv|vvv|cvv|vvv|cvv|||qvv.|vvcv|cvv|vcc|vvv|vvc|vvv|vvv|vvl|vvv|vcv|vvv|vvv|vvc|vvv|qvc|vvv|qvv|vcvv|cvvc","72":"qvv|qqq|qqq|qvq|vvvvvvvvvvqqvtqqcc|cqv|vvt|tvv|cvc|lcc|.vqvvlqvvcqcqcvcvv|tcv|ccv|llc|lvv|cvl|cct|vvt|slq|qqq|qqq|qqt|vqc|qqq|qqq|qqq|qqq|qqc|||qvvv|cvvc|cvv|cvv|vcc|svl|lsc|.xv|cvv|cqv|ccc|vqv|cvq|cvc|vcv|vvl|ccv|llc|lccc|cccc","73":"qqq|vq|qqq|qqq|tvcvccvvvvvvvcvvvv|qqq|qqq|qqq|qqq|qqq|qvvccvvvvvvvvlvvvc|qqv|tcq|vvv|lcq|vvq|qqq|ccv|qcq|qqq|qqq|lqq|qqq|qqq|vvq|vqq|vvv|q|||qvqq|qqql|qll|qqv|lql|qqc|qtv|qqq|vvq|vqq|qqq|qqq|qqv|qqv|qqq|cqq|qvq|qqq|vvll|lvq","74":"|ccc|vcv|vcv|vlclllcllc.vlcc.tc|.vv|vvc|.vv|cqc|qqc|cvvqqvvccc.ctvlqvv|qq.|cqq|l.q|cqq|cqc|qvq|qqq|qct|c.q|qvt|qqq|qqq|.tq|qqq|cvl|.t|tqq|||qqqc|qqqq|qqq|qqq|cqc|tql|qqq|qtq|qqq|qqq|qqq|qqq|qvq|qqv|qqq|llt|qqq|qqq|qvl|qqcl","75":".tl|..c|ctl|..l|c...v.vv.tvclcl.l.|lc.|llv|.vv|llc|.c.|l.....c...cvt.vt.l|qll|tl.|ttc|.l.|llt|tt.|l.c|cc.|l..|l..|lll|lll|cll|lll|lvl|lll|.t.|||.lcl|ltvl|tll|ll.|tvl|clq|llc|tl.|.lt|lcl|.c.|tl.|vlt|tvt|..l|lct|vl.|llv|lt..|.ll.","76":"llt|ctt|tll|tll|l.vlvt.clccvllclcl|tll|ltl|cll|ltl|tl|tclccllccvcttlctlv|ltc|llc|tll|.tl|lll|lll|tll|lvl|.ll|ltl|lll|ltt|ttt|l..|llv|l.l|tt.|||...l|lllt|ltt|t..|ttv|vtl|.tv|lll|ttl|lv.|.tl|lll|lll|llt|tll|tlv|vtl|..l|ll.t|t...","77":"ltl|tl|lll|ltl|ttccvll..ll.l.lvcl|lvl|t.l|l.l|tll|llt|tccl.vt..ccccclclv|vlt|ttl|lll|lll|llt|lll|lll|llv|lvl|ltl|lvl|tt.|tllt|lvv|.|llc||||vtll|v.ll|llv|.v.|vtv|vvv|vvv|vvv|vxv|vlv|vvv|vvv|...|v..|v..|v..|v..|vxv|.v|v"};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fr=n=>n.toLocaleString('fr-FR').replace(/ /g,' ');
+
+/* ---------- Plan du hero ---------- */
+const allees=Object.keys(MAP).map(Number).sort((a,b)=>a-b);
+const cells={}; allees.forEach(a=>cells[a]=MAP[a].split('|'));
+const MAXT=50;
+const plan=document.getElementById('plan'), ctx=plan.getContext('2d');
+let G=null;
+function layout(){
+  const r=plan.getBoundingClientRect(), dpr=Math.min(2,window.devicePixelRatio||1);
+  plan.width=Math.round(r.width*dpr); plan.height=Math.round(r.height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const W=r.width,H=r.height, padL=12,padR=12,padT=r.width<600?30:72,padB=26;
+  let units=0; const xs=[];
+  allees.forEach((a,i)=>{ if(i){units+= (a-allees[i-1]>1)?1.4:0.28;} xs.push(units); units+=1; });
+  const sw=(W-padL-padR)/units, ch=(H-padT-padB)/MAXT;
+  const slots=[]; let target=null;
+  allees.forEach((a,i)=>{
+    const x0=padL+xs[i]*sw, w=sw;
+    cells[a].forEach((s,ti)=>{
+      if(!s) return; const k=s.length, y=padT+ti*ch, gap=k>1&&w/k>1.6?0.6:0, sw2=(w-gap*(k-1))/k;
+      for(let j=0;j<k;j++){ const c=s[j], o={x:x0+j*(sw2+gap),y,w:Math.max(.5,sw2),h:Math.max(1,ch*.74),c,a,t:ti+1}; slots.push(o); if(c==='*') target=o; }
+    });
+  });
+  const strip=a=>{const i=allees.indexOf(a);return {x:padL+xs[i]*sw,w:sw}};
+  G={W,H,padT,padB,padL,sw,ch,xs,slots,target,strip};
+}
+const COL={};
+function cols(){COL.mint=css('--mint');COL.line=css('--night-line');COL.label=css('--label');COL.muted=css('--night-muted');COL.ink=css('--night-ink');}
+function hexA(h,a){h=h.replace('#','');const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
+const ease=t=>t<0?0:t>1?1:1-Math.pow(1-t,3);
+let T0=0, playing=false, phase=-1, hoverA=null;
+const PH=[0,1.6,3.3,5.0,6.8];
+function draw(t){
+  const {W,H,slots,target}=G; ctx.clearRect(0,0,W,H);
+  const p1=ease((t-PH[1])/1.2), p3=ease((t-PH[3])/0.9), p2=ease((t-PH[2])/0.9);
+  const occ=hexA(COL.mint,.62-.44*p1), emp=COL.line, bad='rgba(224,82,82,'+(.85-.5*p1)+')';
+  for(const s of slots){
+    const c=s.c; let f;
+    if(c==='.') f=emp; else if(c==='x') f=bad; else if(c==='*') f=p3>0?hexA(COL.label,p3):emp;
+    else if(c>='A'&&c<='Z') f=p1>0?hexA(COL.label,.35+.6*p1):hexA(COL.mint,.62); else f=occ;
+    if(hoverA===s.a && c!=='*') f=c==='.'?hexA(COL.ink,.28):f;
+    ctx.fillStyle=f; ctx.fillRect(s.x,s.y,s.w,s.h);
+  }
+  // balayage
+  if(t<PH[1]+.2){ const sx=G.padL+(W)*ease(t/PH[1]); const g=ctx.createLinearGradient(sx-120,0,sx,0); g.addColorStop(0,hexA(COL.mint,0)); g.addColorStop(1,hexA(COL.mint,.28)); ctx.fillStyle=g; ctx.fillRect(sx-120,G.padT-6,120,H-G.padT-G.padB+12); ctx.fillStyle=hexA(COL.mint,.9); ctx.fillRect(sx,G.padT-6,1.5,H-G.padT-G.padB+12); }
+  // axe allées
+  ctx.font='500 10.5px "JetBrains Mono", monospace'; ctx.textAlign='center'; ctx.fillStyle=COL.muted;
+  allees.forEach(a=>{ if(W<700?a%10===0:(a%5===0||a===3||a===77)){const s=G.strip(a); ctx.fillText(String(a),s.x+s.w/2,H-9);} });
+  // bloc 64-66
+  if(p2>0){ const a=G.strip(64), b=G.strip(66), x=a.x-3, w=b.x+b.w-a.x+6, y=G.padT-8, h=H-G.padT-G.padB+14;
+    ctx.save(); ctx.globalAlpha=p2; ctx.strokeStyle=COL.label; ctx.setLineDash([5,4]); ctx.lineWidth=1.4; ctx.strokeRect(x,y,w,h); ctx.setLineDash([]);
+    ctx.fillStyle=COL.label; ctx.textAlign='right'; ctx.font='700 11.5px "JetBrains Mono", monospace'; ctx.fillText('BLOC 64 · 65 · 66',x+w,y-8); ctx.restore(); }
+  // cible
+  if(target && p3>0){ const cx=target.x+target.w/2, cy=target.y+target.h/2;
+    ctx.save(); ctx.globalAlpha=.55*p3; ctx.strokeStyle=COL.label; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(G.padL,cy); ctx.lineTo(W-12,cy); ctx.moveTo(cx,G.padT-8); ctx.lineTo(cx,H-G.padB+6); ctx.stroke(); ctx.restore();
+    const pr=(t*1.4)%1, rr=6+pr*22; ctx.strokeStyle=hexA(COL.label,(1-pr)*p3); ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle=COL.label; ctx.beginPath(); ctx.arc(cx,cy,4.5,0,Math.PI*2); ctx.fill();
+    // étiquette
+    const txt='01A640050B', left=cx>W*.6; ctx.font='700 15px "JetBrains Mono", monospace'; const tw=ctx.measureText(txt).width+18, lx=left?cx-tw-16:cx+16, below=cy+66<H-G.padB, ly=below?cy+16:cy-78;
+    ctx.globalAlpha=p3; ctx.fillStyle=COL.label; ctx.fillRect(lx,ly,tw,28); ctx.fillStyle='#1c1704'; ctx.textAlign='left'; ctx.fillText(txt,lx+9,ly+19);
+    ctx.font='500 10px "JetBrains Mono", monospace'; ctx.fillStyle=COL.ink; ctx.fillText('allée 64 · travée 5 · place B',lx,ly+44); ctx.globalAlpha=1; }
+}
+const HUD=[["Étape 1 / 4","Lecture du plan : 14 751 emplacements, 66 allées. Exemple réel."],["Étape 2 / 4","Famille 201, limonades sodas : "+0+" références repérées."],["Étape 3 / 4","Règle famille : conditionnement boîte, allées 64 · 65 · 66."],["Étape 4 / 4","Adresse retenue : 01A640050B. Fanta orange 6×33 cl."]];
+let fam=0; Object.values(MAP).forEach(s=>{for(const c of s) if(c>='A'&&c<='Z') fam++}); HUD[1][1]=`Famille 201, limonades sodas : ${fr(fam)} références repérées.`;
+const hk=document.getElementById('hud-k'), ht=document.getElementById('hud-t'), hb=document.querySelectorAll('.hud .bar i');
+function setHud(i){ if(i===phase) return; phase=i; hk.textContent=HUD[i][0]; ht.textContent=HUD[i][1]; hb.forEach((b,j)=>b.classList.toggle('on',j<=i)); }
+function frame(now){ const t=(now-T0)/1000; draw(t); setHud(t>=PH[3]?3:t>=PH[2]?2:t>=PH[1]?1:0); if(t<PH[4]+30 && playing) requestAnimationFrame(frame); else playing=false; }
+function play(){ T0=performance.now(); phase=-1; if(RM){ draw(PH[4]); setHud(3); return; } if(!playing){playing=true; requestAnimationFrame(frame);} }
+function boot(){ cols(); layout(); draw(0); setHud(0); }
+boot();
+let started=false;
+new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting&&!started){started=true; setTimeout(play,400);} }); },{threshold:.3}).observe(plan);
+document.getElementById('replay').addEventListener('click',play);
+let rz; addEventListener('resize',()=>{clearTimeout(rz); rz=setTimeout(()=>{layout(); if(!playing) draw(RM||started?PH[4]:0);},120)});
+const tip=document.getElementById('plan-tip');
+plan.addEventListener('mousemove',e=>{ const r=plan.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  let a=null; for(const al of allees){const s=G.strip(al); if(x>=s.x&&x<=s.x+s.w){a=al;break}}
+  const ti=Math.floor((y-G.padT)/G.ch);
+  if(a&&ti>=0&&ti<MAXT&&cells[a][ti]){ const s=cells[a][ti]; let o=0,v=0,n=0; for(const c of s){ if(c==='.'||c==='*')v++; else if(c==='x')n++; else o++; }
+    tip.textContent=`Allée ${a} · travée ${ti+1} · ${o} occupée${o>1?'s':''}, ${v} libre${v>1?'s':''}${n?`, ${n} hors gabarit`:''}`; }
+  else tip.textContent=a?`Allée ${a}`:'Survole le plan';
+  if(hoverA!==a){hoverA=a; if(!playing) draw(started||RM?PH[4]:0);} });
+plan.addEventListener('mouseleave',()=>{hoverA=null; tip.textContent='Survole le plan'; if(!playing) draw(started||RM?PH[4]:0);});
+
+/* ---------- Densité famille 201 ---------- */
+const famBy={}; allees.forEach(a=>{let n=0; for(const c of MAP[a]) if(c>='A'&&c<='Z') n++; famBy[a]=n;});
+const svg=document.getElementById('dens'), A0=45, A1=70, VW=560, VH=250, L=30, R=10, TP=26, BT=30;
+const xA=a=>L+(a-A0+.5)*(VW-L-R)/(A1-A0+1), bw0=(VW-L-R)/(A1-A0+1);
+const maxN=Math.max(...Object.values(famBy));
+function dens(bw){
+  const pts=[]; for(let x=A0;x<=A1+1;x+=.1){ let s=0; for(const a of allees){ const n=famBy[a]; if(n) s+=n*Math.exp(-.5*((x-.5-a)/bw)**2); } pts.push([x-.5,s/(bw*Math.sqrt(2*Math.PI))]); }
+  return pts;
+}
+function renderD(){
+  const bw=+document.getElementById('bw').value; document.getElementById('bw-o').textContent=String(bw).replace('.',',')+' allée'+(bw>=2?'s':'');
+  const pts=dens(bw), maxD=Math.max(...pts.map(p=>p[1]),1), top=Math.max(maxN,maxD), y=v=>VH-BT-(v/top)*(VH-BT-TP);
+  let h=`<line class="d-grid" x1="${L}" x2="${VW-R}" y1="${VH-BT}" y2="${VH-BT}"/>`;
+  [0,50,100].forEach(v=>{ if(v<=top) h+=`<text class="d-axis" x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>${v?`<line class="d-grid" x1="${L}" x2="${VW-R}" y1="${y(v)}" y2="${y(v)}" stroke-opacity=".5"/>`:''}`; });
+  h+=`<rect class="d-bloc" x="${xA(64)-bw0/2}" y="${TP-14}" width="${bw0*3}" height="${VH-BT-TP+14}"/><text class="d-note" x="${xA(66)+bw0/2}" y="${TP-18}" text-anchor="end">bloc retenu</text>`;
+  for(let a=A0;a<=A1;a++){ const n=famBy[a]||0; if(n) h+=`<rect class="d-bar${a>=64&&a<=66?' in-bloc':''}" x="${xA(a)-bw0*.36}" y="${y(n)}" width="${bw0*.72}" height="${VH-BT-y(n)}" rx="1.5"><title>Allée ${a} : ${n} références</title></rect>`; }
+  const P=pts.filter(p=>p[0]>=A0-.5&&p[0]<=A1+.5).map(p=>[L+(p[0]-A0+.5)*(VW-L-R)/(A1-A0+1),y(p[1])]);
+  const d='M'+P.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join('L');
+  h+=`<path class="d-area" d="${d}L${P[P.length-1][0].toFixed(1)},${VH-BT}L${P[0][0].toFixed(1)},${VH-BT}Z"/><path class="d-line" d="${d}"/>`;
+  for(let a=A0;a<=A1;a++){ if(a%5===0||(a>=64&&a<=66)) h+=`<text class="d-axis${a>=64&&a<=66?' hot':''}" x="${xA(a)}" y="${VH-BT+18}" text-anchor="middle">${a}</text>`; }
+  h+=`<text class="d-axis" x="${xA(54)}" y="${y(famBy[54])-8}" text-anchor="middle">${famBy[54]}</text>`;
+  svg.innerHTML=h;
+}
+document.getElementById('bw').addEventListener('input',renderD); renderD();
+
+/* ---------- Étapes du moteur ---------- */
+const steps=[...document.querySelectorAll('.step')], raws=[...document.querySelectorAll('#raw span[data-s]')];
+function setStep(n){ steps.forEach(s=>s.classList.toggle('on',s.dataset.s==n)); raws.forEach(r=>r.classList.toggle('on',r.dataset.s==n)); }
+steps.forEach(s=>s.addEventListener('click',()=>setStep(s.dataset.s)));
+setStep(1);
+if(matchMedia('(min-width: 961px)').matches){
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting) setStep(e.target.dataset.s)})},{rootMargin:'-45% 0px -45% 0px'});
+  steps.forEach(s=>io.observe(s));
+}
+
+/* ---------- Cockpit ---------- */
+const ROWS=[
+ {k:'ok',st:'✓ Prêt',lib:'FANTA ORANGE SLEEK 6X33CL',ref:'867416-080 · 201 Limonades sodas',ad:'01A640050B',ty:'STD',why:'22 réf. de la famille à proximité, bloc 64·65·66 pureté 100 %, travée compatible 100×120',cf:3},
+ {k:'ok',st:'✓ Prêt',lib:'PASTILLES JAVEL SANS PARFUM X48',ref:'676460-002 · 651 Entretien WC / Javel',ad:'01A760150A',ty:'STD',why:'Bloc adaptatif « JAVEL » allées 74 à 77 : 20 réf., pureté 100 %, allée dominante 76',cf:3},
+ {k:'bad',st:'⛔ Bloqué · fin de vie',lib:'CONFITURE FRAISE 370 G',ref:'demo · 104 Confitures',ad:'',ty:'',why:'Aucune commande, stock 17 UP, date limite passée : laisser écouler, aucune implantation',cf:3},
+ {k:'bad',st:'⛔ Bloqué · occupée',lib:'RIZ BASMATI 1 KG',ref:'demo · 131 Riz',ad:'01A280120C',ty:'DYC',why:'Destination déjà occupée par 413850-01 : choisir une autre place libre',cf:2},
+ {k:'warn',st:'⚠ À vérifier · sans adresse',lib:'LESSIVE CAPSULES X26',ref:'demo · 611 Lessives',ad:'',ty:'',why:'Aucun bloc cohérent dans la portée : adresse laissée vide plutôt que forcée',cf:1},
+ {k:'warn',st:'⚠ À vérifier · réappro',lib:'CROQUETTES CHAT 2 KG',ref:'demo · 801 Petfood chat',ad:'01A770310A',ty:'STD',why:'Environ 7 réappros par semaine estimés en standard : étudier un emplacement dynamique',cf:2}
+];
+const cls={ok:'c-ok',warn:'c-warn',bad:'c-bad'}, cfl=['','Faible','Moyenne','Haute'];
+function rows(f){ document.getElementById('rows').innerHTML=ROWS.filter(r=>f==='all'||r.k===f).map(r=>`<tr><td><span class="chip ${cls[r.k]}">${r.st}</span></td><td><div class="lib">${r.lib}</div><div class="ref">${r.ref}</div></td><td>${r.ad?`<span class="ad">${r.ad}</span><span class="ty">${r.ty}</span>`:'<span class="ad none">—</span>'}</td><td class="why">${r.why}</td><td><span class="cf" title="Confiance ${cfl[r.cf].toLowerCase()}">${'●'.repeat(r.cf)+'○'.repeat(3-r.cf)}</span> ${cfl[r.cf]}</td></tr>`).join(''); }
+document.querySelectorAll('#filters button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===b)); rows(b.dataset.f);}));
+rows('all');
+
+const tabs=[['t-props','p-props','s-props'],['t-occ','p-occ','s-occ']];
+tabs.forEach(([t,p,s])=>document.getElementById(t).addEventListener('click',()=>{ tabs.forEach(([t2,p2,s2])=>{const on=t2===t; document.getElementById(t2).setAttribute('aria-selected',on); document.getElementById(p2).hidden=!on; document.getElementById(s2).classList.toggle('on',on);}); if(t==='t-occ') heat(); }));
+
+/* carte de chaleur réelle */
+const hc=document.getElementById('heat'), hx=hc.getContext('2d'), CW=12, CH=7, LW=30;
+function heat(){
+  const ramp=['--heat0','--heat1','--heat2','--heat3'].map(css), bad=css('--bad'), faint=css('--faint');
+  hc.width=(LW+MAXT*CW)*2; hc.height=(allees.length*CH+14)*2; hx.setTransform(2,0,0,2,0,0); hx.clearRect(0,0,hc.width,hc.height);
+  hx.font='500 6px "JetBrains Mono", monospace'; hx.fillStyle=faint; hx.textAlign='right';
+  allees.forEach((a,i)=>{ if(i%3===0) hx.fillText(String(a),LW-4,i*CH+CH-1.5);
+    cells[a].forEach((s,ti)=>{ if(!s) return; let o=0,v=0; for(const c of s){ if(c==='.'||c==='*')v++; else if(c!=='x')o++; } if(o+v===0) return;
+      const p=o/(o+v), k=p<.5?0:p<.75?1:p<.95?2:3; hx.fillStyle=ramp[k]; hx.fillRect(LW+ti*CW+.5,i*CH+.5,CW-1,CH-1);
+      });
+  });
+  hx.textAlign='center'; [1,10,20,30,40,50].forEach(t=>hx.fillText(String(t),LW+(t-.5)*CW,allees.length*CH+9));
+}
+hc.addEventListener('mousemove',e=>{ const r=hc.getBoundingClientRect(), sx=(e.clientX-r.left)/r.width*(LW+MAXT*CW), sy=(e.clientY-r.top)/r.height*(allees.length*CH+14);
+  const ti=Math.floor((sx-LW)/CW), ai=Math.floor(sy/CH), a=allees[ai], info=document.getElementById('heat-info');
+  if(a&&ti>=0&&cells[a][ti]){ const s=cells[a][ti]; let o=0,v=0,n=0; for(const c of s){ if(c==='.'||c==='*')v++; else if(c==='x')n++; else o++; } const p=o+v?Math.round(o/(o+v)*1000)/10:0;
+    info.textContent=`Allée ${a} · travée ${ti+1} : ${String(p).replace('.',',')} % · ${o} occupée${o>1?'s':''}, ${v} libre${v>1?'s':''}${n?`, ${n} neutralisée${n>1?'s':''}`:''}`; } });
+const mo=new MutationObserver(()=>{cols(); if(!playing) draw(started||RM?PH[4]:0); if(!document.getElementById('p-occ').hidden) heat();});
+mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(!document.getElementById('p-occ').hidden) heat(); });
+
+/* ---------- Compteurs et apparitions ---------- */
+const counted=new WeakSet();
+function countUp(el){ if(counted.has(el)||RM) return; counted.add(el); const end=+el.dataset.count, t0=performance.now(), d=1100;
+  const step=n=>{const k=ease((n-t0)/d); el.textContent=fr(Math.round(end*k)); if(k<1) requestAnimationFrame(step);}; requestAnimationFrame(step); }
+const rv=[...document.querySelectorAll('.rv')];
+rv.forEach(el=>{ const r=el.getBoundingClientRect(); if(r.top>innerHeight) el.classList.add('pre'); });
+const io2=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.remove('pre'); e.target.querySelectorAll('[data-count]').forEach(countUp); io2.unobserve(e.target);} }),{threshold:.15});
+rv.forEach(el=>io2.observe(el));
+</script>
+</body>
+</html>
