@@ -1,2 +1,2 @@
-Dépose ici les logos (SVG), nommés comme dans la liste : solidworks.svg, catia-v5.svg, ansys.svg, autocad.svg, roboguide.svg, papyrus.svg, excel.svg, vba.svg, power-bi.svg, sql.svg, sas.svg, python.svg, html-css.svg, javascript.svg, git-github.svg, sap.svg, wms.svg, ms-project.svg, jira.svg, notion.svg, claude.svg, chatgpt.svg, gemini.svg
+Dépose ici les logos (SVG, PNG, WebP ou JPG), nommés comme dans la liste : solidworks, catia-v5, ansys, autocad, roboguide, papyrus, excel, vba, power-bi, sql, sas, python, html-css, javascript, git-github, sap, wms, ms-project, jira, notion, claude, chatgpt, gemini
 Chaque logo présent remplace automatiquement la pastille à initiales.
