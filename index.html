@@ -356,7 +356,7 @@ h2{margin:0;font-weight:900;font-stretch:112%;font-size:clamp(32px,4.6vw,60px);l
 
 /* ---------- Section « Outils créés » ---------- */
 .tools-head{margin-top:clamp(56px,8vw,96px);margin-bottom:0;scroll-margin-top:72px}
-.tools-sub{margin:10px 0 0;color:var(--muted);max-width:52ch}
+.tools-sub{margin:10px 0 0;color:var(--muted);max-width:none;text-wrap:balance}
 .tools-head ~ .feature{margin-top:clamp(22px,3vw,40px);scroll-margin-top:72px}
 .lede-a{color:var(--blue);border-bottom:1px solid color-mix(in srgb,var(--blue) 40%,transparent);transition:border-color .3s}
 .lede-a:hover{border-bottom-color:var(--blue)}
@@ -384,28 +384,56 @@ h1{font-size:clamp(36px,4.4vw,62px);margin-bottom:18px;text-wrap:pretty}
 /* ---------- Section IA ---------- */
 .ia{margin-top:clamp(64px,8vw,104px);scroll-margin-top:72px}
 .ia-top{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start;margin-bottom:clamp(28px,4vw,44px)}
-.ia-quote{margin:0;font-weight:900;font-stretch:110%;font-size:clamp(30px,3.6vw,52px);line-height:1;letter-spacing:-.03em;text-transform:uppercase}
-.ia-quote span{display:block;font-family:var(--serif);font-style:italic;font-weight:400;text-transform:none;letter-spacing:0;color:var(--blue);font-size:1.15em;margin-top:.12em}
+.ia-quote{margin:0;font-weight:900;font-stretch:110%;font-size:clamp(28px,3.3vw,48px);line-height:1;letter-spacing:-.03em;text-transform:uppercase}
+.ia-quote span{display:block;font-family:var(--serif);font-style:italic;font-weight:400;text-transform:none;letter-spacing:0;color:var(--blue);font-size:1.05em;line-height:1.05;margin-top:.15em}
 .ia-txt p{margin:0 0 14px;color:var(--muted);font-size:17px;max-width:56ch}
 .ia-txt p:last-child{margin-bottom:0}
-.stairs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:end}
-.st{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:20px 18px 18px;display:grid;gap:6px;align-content:start;min-height:calc(190px + var(--k) * 38px);transition:border-color .4s,transform .5s var(--ease)}
-.st::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;border-radius:6px 6px 0 0;background:var(--blue);opacity:calc(.35 + var(--k) * .22)}
-.st:hover{border-color:color-mix(in srgb,var(--blue) 45%,var(--line));transform:translateY(-4px)}
+.ladder{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));column-gap:12px;row-gap:10px}
+.crowd,.few{grid-row:1;font-size:13.5px;color:var(--muted);line-height:1.35;position:relative;padding-top:14px}
+.crowd{grid-column:1/3}.few{grid-column:3/7}
+.crowd b{color:var(--ink)}.few b{color:var(--blue)}
+.crowd .br,.few .br{position:absolute;left:0;right:0;top:0;height:8px;border:1.5px solid currentColor;border-bottom:0;border-radius:4px 4px 0 0}
+.crowd .br{color:var(--muted)}.few .br{color:var(--blue)}
+.ladder sup a{color:var(--blue);font-size:.85em;padding-left:1px}
+.stairs{grid-column:1/-1;list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:end}
+.st{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px 14px 14px;display:grid;gap:6px;align-content:start;min-height:calc(170px + var(--k) * 30px);transition:border-color .4s,transform .5s var(--ease)}
+.st::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;border-radius:6px 6px 0 0;background:var(--blue);opacity:calc(.2 + var(--k) * .16)}
+.st:hover{transform:translateY(-4px)}
 .st .n{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:.08em}
-.st h3{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
-.st p{margin:0;font-size:15px;color:var(--muted);line-height:1.45}
-.st .proof{justify-self:start;margin-top:auto;padding-top:10px;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--blue)}
+.st h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em}
+.st p{margin:0;font-size:14px;color:var(--muted);line-height:1.42}
+.st .proof{justify-self:start;margin-top:auto;padding-top:8px;font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--blue);line-height:1.35}
+.st .proof.soft{color:var(--muted)}
 .st a.proof{border-bottom:1px solid color-mix(in srgb,var(--blue) 40%,transparent)}
-.st:last-child{background:var(--ink);border-color:var(--ink)}
-.st:last-child h3,.st:last-child .n{color:#fff}
-.st:last-child p{color:#B9BFC7}
-.st:last-child .proof{color:#9DB6FF;border-color:#9DB6FF}
-.st:last-child::after{content:"Mon niveau";position:absolute;top:-11px;right:14px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;background:var(--blue);color:#fff;padding:3px 8px;border-radius:99px}
-.ia-not{margin-top:18px;padding:14px 18px;border-left:3px solid var(--blue);background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:15.5px;color:var(--muted);max-width:90ch}
-.ia-not b{color:var(--ink)}
-@media (max-width:860px){ .ia-top{grid-template-columns:1fr} .stairs{grid-template-columns:1fr 1fr} .st{min-height:0} }
-@media (max-width:520px){ .stairs{grid-template-columns:1fr} }
+.st.warn{background:color-mix(in srgb,#C0392B 5%,var(--paper))}
+.st.warn::before{background:#C0392B;opacity:.6}
+.st.warn .proof{color:#B03A2E}
+.st.me{background:var(--ink);border-color:var(--ink)}
+.st.me h3,.st.me .n{color:#fff}
+.st.me p{color:#B9BFC7}
+.st.me .proof{color:#9DB6FF;border-color:#9DB6FF}
+.st.me::after{content:"Mon niveau";position:absolute;top:-11px;right:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;background:var(--blue);color:#fff;padding:3px 8px;border-radius:99px}
+.st.next{background:transparent;border-style:dashed;border-color:color-mix(in srgb,var(--blue) 45%,var(--line))}
+.st.next::before{opacity:.25}
+.trap{margin-top:clamp(36px,5vw,56px);border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px)}
+.trap-h{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:baseline;margin-bottom:20px}
+.trap-h h3{margin:0;font-size:clamp(22px,2.2vw,30px);font-weight:800;letter-spacing:-.02em}
+.trap-h p{margin:0;color:var(--muted);font-size:16px}
+.trap-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tc{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:18px;display:grid;gap:8px;align-content:start}
+.tc b{font-weight:900;font-stretch:112%;font-size:clamp(30px,3vw,42px);line-height:1;letter-spacing:-.03em;color:#B03A2E}
+.tc p{margin:0;font-size:15px;line-height:1.45}
+.tc span{font-family:var(--mono);font-size:11px;letter-spacing:.03em;color:var(--muted)}
+.tc span sup a{color:var(--blue)}
+.tc.mine{background:var(--blue);border-color:var(--blue);color:#fff}
+.tc.mine b{color:#fff;font-size:clamp(24px,2.4vw,32px)}
+.tc.mine span{color:#DCE4FF}
+.src{margin:16px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted);display:grid;gap:3px}
+.src a{color:var(--muted);border-bottom:1px solid var(--line)}
+.src a:hover{color:var(--blue)}
+@media (max-width:1000px){ .ladder,.stairs{grid-template-columns:repeat(3,minmax(0,1fr))} .crowd{grid-column:1/2}.few{grid-column:2/4} .st{min-height:0} }
+@media (max-width:860px){ .ia-top,.trap-h,.trap-g{grid-template-columns:1fr} }
+@media (max-width:560px){ .ladder,.stairs{grid-template-columns:1fr 1fr} .crowd,.few{grid-column:auto} .few{grid-row:1} .crowd{grid-row:1} }
 
 /* ---------- Démo en direct dans le navigateur dessiné ---------- */
 .browser .bar .try{margin-left:auto;font:600 11px var(--mono);letter-spacing:.04em;border:0;border-radius:99px;padding:4px 11px;cursor:pointer;background:var(--blue);color:#fff;transition:transform .3s var(--ease),filter .3s}
@@ -426,6 +454,12 @@ h1{font-size:clamp(36px,4.4vw,62px);margin-bottom:18px;text-wrap:pretty}
 .tk{display:inline-flex;align-items:center;gap:10px;white-space:nowrap;font-weight:700;font-size:clamp(15px,1.4vw,18px);color:#F2F3EF;border:1px solid #2E3440;border-radius:99px;padding:6px 16px 6px 6px}
 .tk i{font:600 11px/1 var(--mono);font-style:normal;letter-spacing:.02em;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;color:#13171E}
 .tk.c i{background:#9DB6FF}.tk.d i{background:#7FD1A2}.tk.s i{background:#F4C21A}.tk.w i{background:#FF9F7A}.tk.a i{background:#C9A7FF}
+
+/* ---------- Bandeaux : d'un bord à l'autre de l'écran ---------- */
+.band{margin-inline:calc(50% - 50vw);width:100vw;border-radius:0}
+
+.tk i{position:relative;overflow:hidden}
+.tk i img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:5px;background:#fff;border-radius:50%}
 
 /* ---------- Cursor (desktop only) ---------- */
 .cur{position:fixed;left:0;top:0;z-index:100;pointer-events:none;display:none}
@@ -814,7 +848,7 @@ html.ld .loader.out{transform:translateY(-100%)}
   <p class="lbl src">Résultats obtenus chez Auchan, 2023–2025, et Casino, 2025–2026</p>
 
   <div class="shead tools-head" id="mes-outils">
-    <div><h2 class="rv">Outils <em class="it">créés</em></h2><p class="tools-sub rv">Trois problèmes qui m'agaçaient, trois outils en ligne. Un au travail, deux à côté.</p></div>
+    <div><h2 class="rv">Outils <em class="it">créés</em></h2><p class="tools-sub rv">Trois problèmes qui m'agaçaient, trois outils en ligne : deux pour le travail, un pour l'été.</p></div>
     <span class="lbl">03 outils · du terrain au navigateur</span>
   </div>
   <section id="pickwise" class="feature pw rv" aria-label="Pickwise, outil créé chez Casino">
@@ -921,21 +955,39 @@ html.ld .loader.out{transform:translateY(-100%)}
   </section>
 
   <section id="ia" class="ia">
-    <div class="shead"><h2 class="rv">L'IA, <em class="it">mon accélérateur</em></h2><span class="lbl">Utiliser · piloter · construire · intégrer</span></div>
+    <div class="shead"><h2 class="rv">L'IA, <em class="it">mon accélérateur</em></h2><span class="lbl">6 niveaux · où j'en suis</span></div>
     <div class="ia-top">
-      <p class="ia-quote rv">L'IA calcule, propose, accélère. <span>L'humain décide.</span></p>
+      <p class="ia-quote rv">Je réfléchis, je conçois, je décide. <span>L'IA m'aide à le faire beaucoup plus vite.</span></p>
       <div class="ia-txt rv">
-        <p>Pour moi, l'IA est un outil de méthodes comme les autres, et le plus puissant : elle réduit à quelques semaines le temps entre une idée de terrain et un outil qui tourne. C'est la clé de la productivité des prochaines années, à une condition : savoir la piloter, vérifier ce qu'elle produit et garder la décision.</p>
-        <p>J'utilise Claude et ChatGPT au quotidien pour analyser, structurer, concevoir et coder. Voici jusqu'où je vais, avec une preuve à chaque marche.</p>
+        <p>Pour moi, l'IA est un outil de méthodes comme les autres, et le plus puissant : elle réduit à quelques semaines le temps entre une idée de terrain et un outil qui tourne. C'est la clé de la productivité des prochaines années, à une condition : garder la tête aux commandes.</p>
+        <p>J'utilise Claude et ChatGPT au quotidien pour analyser, structurer, concevoir et coder. La plupart des gens s'arrêtent aux deux premières marches. Voici les six, et où j'en suis.</p>
       </div>
     </div>
-    <ol class="stairs">
-      <li class="st rv" style="--k:0"><span class="n">01</span><h3>Utiliser</h3><p>Analyser, résumer, rédiger, structurer une réflexion. Tous les jours.</p><span class="proof">Claude · ChatGPT</span></li>
-      <li class="st rv" style="--k:1"><span class="n">02</span><h3>Piloter</h3><p>Écrire un vrai cahier des charges, faire itérer, vérifier et corriger ce qui sort.</p><a class="proof" href="#crewline" data-cur="link">23 tests automatiques · Crewline</a></li>
-      <li class="st rv" style="--k:2"><span class="n">03</span><h3>Construire</h3><p>Concevoir des outils complets avec l'IA comme copilote, et les mettre en ligne.</p><a class="proof" href="#mes-outils" data-cur="link">3 outils en ligne</a></li>
-      <li class="st rv" style="--k:3"><span class="n">04</span><h3>Intégrer</h3><p>Mettre l'IA à l'intérieur de mes outils : saisie à la voix et par photo, modèles entraînés dans le navigateur.</p><a class="proof" href="#crewline" data-cur="link">Gemini + 3 modèles · Crewline</a></li>
-    </ol>
-    <div class="ia-not rv"><b>Et savoir s'en passer.</b> Pickwise n'utilise pas d'IA générative : des règles métier et des statistiques, pour que chaque adresse proposée reste explicable et vérifiable. Choisir le bon outil, c'est aussi ça, les méthodes.</div>
+    <div class="ladder rv">
+      <div class="crowd"><span class="br"></span><b>97 %</b> des salariés de bureau en restent là, ou n'utilisent pas l'IA<sup><a href="#ia-src">1</a></sup></div>
+      <div class="few"><span class="br"></span><b>Moins de 3 %</b> vont plus loin<sup><a href="#ia-src">1</a></sup></div>
+      <ol class="stairs">
+        <li class="st" style="--k:0"><span class="n">01</span><h3>Questionner</h3><p>Une question, une réponse. L'IA comme un moteur de recherche qui parle.</p><span class="proof soft">Le niveau de départ</span></li>
+        <li class="st warn" style="--k:1"><span class="n">02</span><h3>Déléguer</h3><p>Faire rédiger, copier, coller, sans relire ni comprendre.</p><span class="proof">⚠ Le piège de la dépendance</span></li>
+        <li class="st" style="--k:2"><span class="n">03</span><h3>Piloter</h3><p>Un vrai cahier des charges, des itérations, et tout ce qui sort est vérifié.</p><a class="proof" href="#crewline" data-cur="link">23 tests automatiques · Crewline</a></li>
+        <li class="st" style="--k:3"><span class="n">04</span><h3>Construire</h3><p>Des outils complets, conçus avec l'IA comme copilote, et mis en ligne.</p><a class="proof" href="#mes-outils" data-cur="link">3 outils en ligne</a></li>
+        <li class="st me" style="--k:4"><span class="n">05</span><h3>Intégrer</h3><p>L'IA à l'intérieur de mes outils : saisie à la voix et par photo, modèles entraînés dans le navigateur.</p><a class="proof" href="#crewline" data-cur="link">Gemini + 3 modèles · Crewline</a></li>
+        <li class="st next" style="--k:5"><span class="n">06</span><h3>Orchestrer</h3><p>Faire travailler plusieurs IA ensemble, avec une mémoire partagée.</p><span class="proof">Mon chantier en cours</span></li>
+      </ol>
+    </div>
+    <div class="trap">
+      <div class="trap-h rv"><h3>Le piège : laisser l'IA penser à sa place</h3><p>Utilisée sans recul, l'IA rend dépendant et fait baisser l'effort de réflexion. Les premières études le mesurent déjà.</p></div>
+      <div class="trap-g">
+        <div class="tc rv"><b>319</b><p>salariés interrogés : plus ils font confiance à l'IA, moins ils exercent leur esprit critique.</p><span>Microsoft Research et Carnegie Mellon, 2025<sup><a href="#ia-src">2</a></sup></span></div>
+        <div class="tc rv"><b>54</b><p>participants suivis à l'électroencéphalogramme : en rédigeant avec ChatGPT, leur cerveau s'engage moins, et beaucoup ne savent plus citer leur propre texte.</p><span>MIT Media Lab, 2025, étude préliminaire<sup><a href="#ia-src">3</a></sup></span></div>
+        <div class="tc mine rv"><b>Ma règle</b><p>Je réfléchis d'abord, l'IA accélère ensuite, et je vérifie tout : 23 tests automatiques dans Crewline, 46 champs sur 46 contrôlés dans Pickwise.</p><span>Ce qui me sépare de la marche 02</span></div>
+      </div>
+      <ol class="src" id="ia-src">
+        <li><a href="https://www.sectionai.com/ai/the-ai-proficiency-report-january-2026" target="_blank" rel="noopener">Section, The AI Proficiency Report, janvier 2026</a> · 5 000 salariés de bureau aux États-Unis, au Royaume-Uni et au Canada</li>
+        <li><a href="https://www.theregister.com/2025/02/11/microsoft_study_ai_critical_thinking/" target="_blank" rel="noopener">Lee et al., Microsoft Research et Carnegie Mellon, 2025</a></li>
+        <li><a href="https://www.analyticsvidhya.com/blog/2025/06/is-chatgpt-making-us-dumber/" target="_blank" rel="noopener">Kosmyna et al., « Your Brain on ChatGPT », MIT Media Lab, 2025</a></li>
+      </ol>
+    </div>
   </section>
 
 
@@ -950,7 +1002,7 @@ html.ld .loader.out{transform:translateY(-100%)}
   </div>
 
   <div class="band band2" aria-label="Logiciels et outils que j'utilise">
-    <div class="track2" id="track2"><span class="tk c"><i>SW</i>SolidWorks</span><span class="tk c"><i>CA</i>Catia V5</span><span class="tk c"><i>AN</i>ANSYS</span><span class="tk c"><i>AC</i>AutoCAD</span><span class="tk c"><i>RG</i>RoboGuide</span><span class="tk c"><i>PA</i>Papyrus</span><span class="tk d"><i>XL</i>Excel</span><span class="tk d"><i>VB</i>VBA</span><span class="tk d"><i>BI</i>Power BI</span><span class="tk d"><i>SQ</i>SQL</span><span class="tk d"><i>SA</i>SAS</span><span class="tk w"><i>PY</i>Python</span><span class="tk w"><i>&lt;&gt;</i>HTML / CSS</span><span class="tk w"><i>JS</i>JavaScript</span><span class="tk w"><i>GH</i>Git · GitHub</span><span class="tk s"><i>SP</i>SAP</span><span class="tk s"><i>WM</i>WMS</span><span class="tk s"><i>MP</i>MS Project</span><span class="tk s"><i>JI</i>Jira</span><span class="tk s"><i>NO</i>Notion</span><span class="tk a"><i>CL</i>Claude</span><span class="tk a"><i>GP</i>ChatGPT</span><span class="tk a"><i>GE</i>Gemini</span><span class="tk c"><i>SW</i>SolidWorks</span><span class="tk c"><i>CA</i>Catia V5</span><span class="tk c"><i>AN</i>ANSYS</span><span class="tk c"><i>AC</i>AutoCAD</span><span class="tk c"><i>RG</i>RoboGuide</span><span class="tk c"><i>PA</i>Papyrus</span><span class="tk d"><i>XL</i>Excel</span><span class="tk d"><i>VB</i>VBA</span><span class="tk d"><i>BI</i>Power BI</span><span class="tk d"><i>SQ</i>SQL</span><span class="tk d"><i>SA</i>SAS</span><span class="tk w"><i>PY</i>Python</span><span class="tk w"><i>&lt;&gt;</i>HTML / CSS</span><span class="tk w"><i>JS</i>JavaScript</span><span class="tk w"><i>GH</i>Git · GitHub</span><span class="tk s"><i>SP</i>SAP</span><span class="tk s"><i>WM</i>WMS</span><span class="tk s"><i>MP</i>MS Project</span><span class="tk s"><i>JI</i>Jira</span><span class="tk s"><i>NO</i>Notion</span><span class="tk a"><i>CL</i>Claude</span><span class="tk a"><i>GP</i>ChatGPT</span><span class="tk a"><i>GE</i>Gemini</span></div>
+    <div class="track2" id="track2"><span class="tk c"><i><img src="images/logos/solidworks.svg" alt="" loading="lazy" onerror="this.remove()">SW</i>SolidWorks</span><span class="tk c"><i><img src="images/logos/catia-v5.svg" alt="" loading="lazy" onerror="this.remove()">CA</i>Catia V5</span><span class="tk c"><i><img src="images/logos/ansys.svg" alt="" loading="lazy" onerror="this.remove()">AN</i>ANSYS</span><span class="tk c"><i><img src="images/logos/autocad.svg" alt="" loading="lazy" onerror="this.remove()">AC</i>AutoCAD</span><span class="tk c"><i><img src="images/logos/roboguide.svg" alt="" loading="lazy" onerror="this.remove()">RG</i>RoboGuide</span><span class="tk c"><i><img src="images/logos/papyrus.svg" alt="" loading="lazy" onerror="this.remove()">PA</i>Papyrus</span><span class="tk d"><i><img src="images/logos/excel.svg" alt="" loading="lazy" onerror="this.remove()">XL</i>Excel</span><span class="tk d"><i><img src="images/logos/vba.svg" alt="" loading="lazy" onerror="this.remove()">VB</i>VBA</span><span class="tk d"><i><img src="images/logos/power-bi.svg" alt="" loading="lazy" onerror="this.remove()">BI</i>Power BI</span><span class="tk d"><i><img src="images/logos/sql.svg" alt="" loading="lazy" onerror="this.remove()">SQ</i>SQL</span><span class="tk d"><i><img src="images/logos/sas.svg" alt="" loading="lazy" onerror="this.remove()">SA</i>SAS</span><span class="tk w"><i><img src="images/logos/python.svg" alt="" loading="lazy" onerror="this.remove()">PY</i>Python</span><span class="tk w"><i><img src="images/logos/html-css.svg" alt="" loading="lazy" onerror="this.remove()">&lt;&gt;</i>HTML / CSS</span><span class="tk w"><i><img src="images/logos/javascript.svg" alt="" loading="lazy" onerror="this.remove()">JS</i>JavaScript</span><span class="tk w"><i><img src="images/logos/git-github.svg" alt="" loading="lazy" onerror="this.remove()">GH</i>Git · GitHub</span><span class="tk s"><i><img src="images/logos/sap.svg" alt="" loading="lazy" onerror="this.remove()">SP</i>SAP</span><span class="tk s"><i><img src="images/logos/wms.svg" alt="" loading="lazy" onerror="this.remove()">WM</i>WMS</span><span class="tk s"><i><img src="images/logos/ms-project.svg" alt="" loading="lazy" onerror="this.remove()">MP</i>MS Project</span><span class="tk s"><i><img src="images/logos/jira.svg" alt="" loading="lazy" onerror="this.remove()">JI</i>Jira</span><span class="tk s"><i><img src="images/logos/notion.svg" alt="" loading="lazy" onerror="this.remove()">NO</i>Notion</span><span class="tk a"><i><img src="images/logos/claude.svg" alt="" loading="lazy" onerror="this.remove()">CL</i>Claude</span><span class="tk a"><i><img src="images/logos/chatgpt.svg" alt="" loading="lazy" onerror="this.remove()">GP</i>ChatGPT</span><span class="tk a"><i><img src="images/logos/gemini.svg" alt="" loading="lazy" onerror="this.remove()">GE</i>Gemini</span><span class="tk c"><i><img src="images/logos/solidworks.svg" alt="" loading="lazy" onerror="this.remove()">SW</i>SolidWorks</span><span class="tk c"><i><img src="images/logos/catia-v5.svg" alt="" loading="lazy" onerror="this.remove()">CA</i>Catia V5</span><span class="tk c"><i><img src="images/logos/ansys.svg" alt="" loading="lazy" onerror="this.remove()">AN</i>ANSYS</span><span class="tk c"><i><img src="images/logos/autocad.svg" alt="" loading="lazy" onerror="this.remove()">AC</i>AutoCAD</span><span class="tk c"><i><img src="images/logos/roboguide.svg" alt="" loading="lazy" onerror="this.remove()">RG</i>RoboGuide</span><span class="tk c"><i><img src="images/logos/papyrus.svg" alt="" loading="lazy" onerror="this.remove()">PA</i>Papyrus</span><span class="tk d"><i><img src="images/logos/excel.svg" alt="" loading="lazy" onerror="this.remove()">XL</i>Excel</span><span class="tk d"><i><img src="images/logos/vba.svg" alt="" loading="lazy" onerror="this.remove()">VB</i>VBA</span><span class="tk d"><i><img src="images/logos/power-bi.svg" alt="" loading="lazy" onerror="this.remove()">BI</i>Power BI</span><span class="tk d"><i><img src="images/logos/sql.svg" alt="" loading="lazy" onerror="this.remove()">SQ</i>SQL</span><span class="tk d"><i><img src="images/logos/sas.svg" alt="" loading="lazy" onerror="this.remove()">SA</i>SAS</span><span class="tk w"><i><img src="images/logos/python.svg" alt="" loading="lazy" onerror="this.remove()">PY</i>Python</span><span class="tk w"><i><img src="images/logos/html-css.svg" alt="" loading="lazy" onerror="this.remove()">&lt;&gt;</i>HTML / CSS</span><span class="tk w"><i><img src="images/logos/javascript.svg" alt="" loading="lazy" onerror="this.remove()">JS</i>JavaScript</span><span class="tk w"><i><img src="images/logos/git-github.svg" alt="" loading="lazy" onerror="this.remove()">GH</i>Git · GitHub</span><span class="tk s"><i><img src="images/logos/sap.svg" alt="" loading="lazy" onerror="this.remove()">SP</i>SAP</span><span class="tk s"><i><img src="images/logos/wms.svg" alt="" loading="lazy" onerror="this.remove()">WM</i>WMS</span><span class="tk s"><i><img src="images/logos/ms-project.svg" alt="" loading="lazy" onerror="this.remove()">MP</i>MS Project</span><span class="tk s"><i><img src="images/logos/jira.svg" alt="" loading="lazy" onerror="this.remove()">JI</i>Jira</span><span class="tk s"><i><img src="images/logos/notion.svg" alt="" loading="lazy" onerror="this.remove()">NO</i>Notion</span><span class="tk a"><i><img src="images/logos/claude.svg" alt="" loading="lazy" onerror="this.remove()">CL</i>Claude</span><span class="tk a"><i><img src="images/logos/chatgpt.svg" alt="" loading="lazy" onerror="this.remove()">GP</i>ChatGPT</span><span class="tk a"><i><img src="images/logos/gemini.svg" alt="" loading="lazy" onerror="this.remove()">GE</i>Gemini</span></div>
   </div>
 
 
