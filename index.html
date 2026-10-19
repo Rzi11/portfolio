@@ -337,7 +337,13 @@ h2{margin:0;font-weight:900;font-stretch:112%;font-size:clamp(32px,4.6vw,60px);l
 .feature.pw .browser .bar span{background:#05241a;color:#9dbcac}
 .feature.pw .browser img{aspect-ratio:1440/900}
 .feature.pw .phone{border-color:#021710;background:#021710;box-shadow:0 22px 50px rgba(0,0,0,.6)}
-.feature.pw .phone.p2{right:-2%;bottom:3%}
+.feature.pw .stage-in{padding-bottom:27%}
+.feature.pw .browser{width:90%;margin-left:auto;transform:rotate(.8deg)}
+.feature.pw .phone.p1{right:auto;left:-1%;bottom:0;width:24%;transform:rotate(-3deg) translateZ(70px)}
+.pw-dens{position:absolute;right:-1%;bottom:2%;width:62%;border-radius:10px;overflow:hidden;border:1px solid #2a5a45;box-shadow:0 24px 56px rgba(0,0,0,.6);transform:rotate(-1.2deg) translateZ(50px)}
+.pw-dens img{display:block;width:100%;height:auto}
+@media (prefers-reduced-motion:no-preference){ .pw-dens{animation:float 8s ease-in-out -1s infinite} }
+@media (max-width:860px){ .feature.pw .phone.p1{width:28%} .pw-dens{width:66%} .feature.pw .stage-in{padding-bottom:30%} }
 .feature.pw .stage figcaption{color:color-mix(in srgb,var(--pw-ink) 55%,transparent)}
 .racks{position:absolute;left:0;right:0;bottom:0;height:clamp(30px,3.6vw,46px);z-index:-1;pointer-events:none;display:flex;gap:3px;align-items:flex-end;padding-inline:2px;opacity:.9}
 .racks i{flex:1;height:var(--h);background:#174531;border-radius:2px 2px 0 0}
@@ -832,8 +838,8 @@ html.ld .loader.out{transform:translateY(-100%)}
     <figure class="stage">
       <div class="stage-in">
         <div class="browser"><div class="bar"><i></i><i></i><i></i><span>gaythmejai.com/pickwise</span></div><img src="images/pickwise-site.webp" alt="Le site de Pickwise : le plan d'un picking de 14 751 emplacements, chaque point est un emplacement" width="1440" height="900" loading="lazy"></div>
-        <div class="phone p1"><img src="images/pickwise-app-1.webp" alt="La démo Pickwise sur téléphone : propositions d'adresse en cartes" width="780" height="1688" loading="lazy"></div>
-        <div class="phone p2"><img src="images/pickwise-app-2.webp" alt="La démo Pickwise sur téléphone : contrôles et blocages" width="780" height="1688" loading="lazy"></div>
+        <div class="phone p1"><img src="images/pickwise-app-2.webp" alt="La démo Pickwise sur téléphone : propositions d'implantation avec leur statut de contrôle" width="780" height="1688" loading="lazy"></div>
+        <div class="pw-dens"><img src="images/pickwise-densite.webp" alt="Famille 201, limonades sodas : références par allée et courbe de densité. Le bloc 64, 65, 66 est retenu." width="1214" height="612" loading="lazy"></div>
       </div>
       <figcaption>Captures du site et de la démo, données de démonstration fictives</figcaption>
     </figure>
