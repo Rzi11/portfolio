@@ -1,2 +1,0 @@
-Dépose ici les logos (SVG, PNG, WebP ou JPG), nommés comme dans la liste : solidworks, catia-v5, ansys, autocad, roboguide, papyrus, excel, vba, power-bi, sql, sas, python, html-css, javascript, git-github, sap, wms, ms-project, jira, notion, claude, chatgpt, gemini
-Chaque logo présent remplace automatiquement la pastille à initiales.
